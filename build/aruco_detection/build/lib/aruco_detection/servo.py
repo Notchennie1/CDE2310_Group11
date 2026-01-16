@@ -11,16 +11,16 @@ class MG996R:
         self.servo = Servo(pin,
                            min_pulse_width=1/1000,   # 1ms
                            max_pulse_width=2/1000)   # 2ms
-        self.servo.value = None  # stop
+        self.servo.value = 0  # stop
 
-    def fire(self, count=3):
+    def fire(self, count=1):
         for i in range(count):
             self.servo.value = 1  # full CCW
             time.sleep(360 / DEG_PER_SEC)
-            self.servo.value = None   # stop
+            self.servo.value = 0   # stop
             if i < count - 1:
                 time.sleep(SHOT_PAUSE)
 
     def close(self):
-        self.servo.value = None
+        self.servo.value = 0
         self.servo.close()

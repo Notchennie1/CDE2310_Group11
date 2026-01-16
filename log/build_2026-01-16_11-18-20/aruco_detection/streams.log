@@ -1,0 +1,37 @@
+[3.319s] Invoking command in '/home/ubuntu/turtlebot3_ws/src/detection_final': PYTHONPATH=/home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base build/aruco_detection build --build-base /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build install --record /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/install.log --single-version-externally-managed install_data
+[4.565s] running egg_info
+[4.573s] writing build/aruco_detection/aruco_detection.egg-info/PKG-INFO
+[4.573s] writing dependency_links to build/aruco_detection/aruco_detection.egg-info/dependency_links.txt
+[4.576s] writing entry points to build/aruco_detection/aruco_detection.egg-info/entry_points.txt
+[4.578s] writing requirements to build/aruco_detection/aruco_detection.egg-info/requires.txt
+[4.582s] writing top-level names to build/aruco_detection/aruco_detection.egg-info/top_level.txt
+[4.591s] reading manifest file 'build/aruco_detection/aruco_detection.egg-info/SOURCES.txt'
+[4.597s] writing manifest file 'build/aruco_detection/aruco_detection.egg-info/SOURCES.txt'
+[4.598s] running build
+[4.600s] running build_py
+[4.601s] copying aruco_detection/servo.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib/aruco_detection
+[4.605s] running install
+[4.606s] running install_lib
+[4.611s] copying /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib/aruco_detection/servo.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection
+[4.616s] byte-compiling /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection/__init__.py to __init__.cpython-310.pyc
+[4.617s] byte-compiling /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection/Task_B_Main.py to Task_B_Main.cpython-310.pyc
+[4.622s] byte-compiling /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection/aruco_detection.py to aruco_detection.cpython-310.pyc
+[4.625s] byte-compiling /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection/servo.py to servo.cpython-310.pyc
+[4.627s] byte-compiling /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection/test.py to test.cpython-310.pyc
+[4.629s] byte-compiling /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection/docking_base.py to docking_base.cpython-310.pyc
+[4.638s] byte-compiling /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection/servo_node.py to servo_node.cpython-310.pyc
+[4.640s] byte-compiling /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection/Task_A_Main.py to Task_A_Main.cpython-310.pyc
+[4.643s] byte-compiling /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection/docking_main.py to docking_main.cpython-310.pyc
+[4.650s] running install_data
+[4.651s] running install_egg_info
+[4.658s] removing '/home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection-0.0.0-py3.10.egg-info' (and everything under it)
+[4.660s] Copying build/aruco_detection/aruco_detection.egg-info to /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection-0.0.0-py3.10.egg-info
+[4.667s] running install_scripts
+[4.758s] Installing camera_node script to /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/aruco_detection
+[4.759s] Installing mission_manager script to /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/aruco_detection
+[4.760s] Installing pnp_node script to /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/aruco_detection
+[4.761s] Installing servo_node script to /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/aruco_detection
+[4.762s] Installing task_a_node script to /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/aruco_detection
+[4.763s] Installing task_b_node script to /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/aruco_detection
+[4.766s] writing list of installed files to '/home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/install.log'
+[4.899s] Invoked command in '/home/ubuntu/turtlebot3_ws/src/detection_final' returned '0': PYTHONPATH=/home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base build/aruco_detection build --build-base /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build install --record /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/install.log --single-version-externally-managed install_data
