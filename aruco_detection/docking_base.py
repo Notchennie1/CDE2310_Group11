@@ -35,6 +35,7 @@ class DockingBase(Node):
 
         # Activation gate
         self.is_active = False
+        self._logged_waiting = False  # throttle flag for not-active log
 
         # Publishers
         self.cmd_pub = self.create_publisher(Twist, 'cmd_vel', 10)
@@ -48,12 +49,21 @@ class DockingBase(Node):
         # 20 Hz drive timer
         self.drive_timer = self.create_timer(0.05, self.drive_callback)
 
+        self.get_logger().info(
+            f'Node ready — dock_marker_id={self.dock_marker_id}. '
+            f'Waiting for activation...'
+        )
+
     # ------------------------------------------------------------------
     # Activation gate — subclasses wire their own topic to this callback
     # ------------------------------------------------------------------
     def active_cb(self, msg):
         self.is_active = msg.data
-        if not self.is_active:
+        if self.is_active:
+            self._logged_waiting = False
+            self.get_logger().info('Activated — looking for marker...')
+        else:
+            self.get_logger().info('Deactivated.')
             self.stop_robot()
 
     # ------------------------------------------------------------------
@@ -76,6 +86,12 @@ class DockingBase(Node):
         if marker_id != self.dock_marker_id:
             return
         if not self.is_active:
+            if not self._logged_waiting:
+                self.get_logger().info(
+                    f'Marker ID {marker_id} detected but node not active — '
+                    f'publish /task_a_active or /task_b_active to start'
+                )
+                self._logged_waiting = True
             return
         if self.state != 'idle':
             return
