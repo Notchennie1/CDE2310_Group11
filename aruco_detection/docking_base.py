@@ -26,11 +26,9 @@ class DockingBase(Node):
 
         # State machine
         self.state = 'idle'
-        self.rotation_phase = 0
 
         # Tuning parameters
-        self.stop_dist = 0.07    # 7cm stop distance from marker
-        self.side_offset = 0.15  # 15cm sideways offset to target
+        self.stop_dist = 0.10    # 10cm stop distance from marker
         self.x_threshold = 0.02  # 2cm lateral alignment tolerance
         self.lin_speed = 0.04    # 4cm/s
         self.ang_speed = 0.2     # rad/s
@@ -97,7 +95,6 @@ class DockingBase(Node):
             self.angle_to_turn = math.atan2(marker_x, marker_z)
             self.distance_to_travel = max(0.0, marker_z - self.stop_dist)
             self.start_yaw = self.current_yaw
-            self.rotation_phase = 0
             self.state = 'rotating'
             self.get_logger().info(
                 f'Marker at {marker_z:.2f}m forward, {marker_x:.2f}m sideways — '
@@ -125,26 +122,10 @@ class DockingBase(Node):
             yaw_traveled = self._angle_diff(self.current_yaw, self.start_yaw)
 
             if abs(yaw_traveled) >= abs(self.angle_to_turn):
-                if self.rotation_phase == 0:
-                    self.get_logger().info('Aligned to marker! Driving in...')
-                    self.rotation_phase = 0
-                    self.state = 'driving_to_marker'
-                    self.start_x = self.current_x
-                    self.start_y = self.current_y
-
-                elif self.rotation_phase == 1:
-                    self.get_logger().info('Turned right! Driving offset...')
-                    self.rotation_phase = 0
-                    self.state = 'driving_offset'
-                    self.start_x = self.current_x
-                    self.start_y = self.current_y
-
-                elif self.rotation_phase == 2:
-                    self.get_logger().info('Facing target! Docked.')
-                    self.rotation_phase = 0
-                    self.state = 'docked'
-                    self.cmd_pub.publish(Twist())
-                    self.on_docked()
+                self.get_logger().info('Aligned to marker! Driving in...')
+                self.state = 'driving_to_marker'
+                self.start_x = self.current_x
+                self.start_y = self.current_y
             else:
                 cmd = Twist()
                 cmd.angular.z = -self.ang_speed if self.angle_to_turn > 0 else self.ang_speed
@@ -156,27 +137,10 @@ class DockingBase(Node):
                 (self.current_y - self.start_y) ** 2
             )
             if dist_traveled >= self.distance_to_travel:
-                self.get_logger().info('Reached marker! Turning right 90°')
-                self.rotation_phase = 1
-                self.angle_to_turn = math.pi / 2
-                self.state = 'rotating'
-                self.start_yaw = self.current_yaw
-            else:
-                cmd = Twist()
-                cmd.linear.x = self.lin_speed
-                self.cmd_pub.publish(cmd)
-
-        elif self.state == 'driving_offset':
-            dist_traveled = math.sqrt(
-                (self.current_x - self.start_x) ** 2 +
-                (self.current_y - self.start_y) ** 2
-            )
-            if dist_traveled >= self.side_offset:
-                self.get_logger().info('Offset reached! Turning left 90°')
-                self.rotation_phase = 2
-                self.angle_to_turn = -math.pi / 2
-                self.state = 'rotating'
-                self.start_yaw = self.current_yaw
+                self.get_logger().info('Reached marker! Docked.')
+                self.state = 'docked'
+                self.cmd_pub.publish(Twist())
+                self.on_docked()
             else:
                 cmd = Twist()
                 cmd.linear.x = self.lin_speed
@@ -196,7 +160,6 @@ class DockingBase(Node):
     # ------------------------------------------------------------------
     def stop_robot(self):
         self.state = 'idle'
-        self.rotation_phase = 0
         self.cmd_pub.publish(Twist())
 
     # ------------------------------------------------------------------
