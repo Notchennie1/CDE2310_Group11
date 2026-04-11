@@ -1,34 +1,26 @@
-import lgpio
+from gpiozero import Servo
 import time
 
-# RPi4B uses gpiochip4
-GPIOCHIP = 0
-
-# Pulse widths in microseconds — calibrated from ESP32 values
-# ESP32 duty/1023 * 20000us = pulse width
-STOP_US     = 1505   # duty=77  → 1.5ms stop
-CCW_US      = 2014   # duty=103 → 2.0ms full speed CCW
-
-FREQ        = 50
-DEG_PER_SEC = 90 / 0.43  # calibrated
+# Calibrated: 90° at full speed = 0.43s
+DEG_PER_SEC = 90 / 0.43
 SHOT_PAUSE  = 0.2
 
 
 class MG996R:
-    def __init__(self, pin=12):
-        self.pin = pin
-        self.chip = lgpio.gpiochip_open(GPIOCHIP)
-        lgpio.gpio_claim_output(self.chip, self.pin)
-        lgpio.tx_servo(self.chip, self.pin, STOP_US, FREQ)
+    def __init__(self, pin=18):
+        self.servo = Servo(pin,
+                           min_pulse_width=1/1000,   # 1ms
+                           max_pulse_width=2/1000)   # 2ms
+        self.servo.value = 0  # stop
 
     def fire(self, count=3):
         for i in range(count):
-            lgpio.tx_servo(self.chip, self.pin, CCW_US, FREQ)
+            self.servo.value = -1  # full CCW
             time.sleep(90 / DEG_PER_SEC)
-            lgpio.tx_servo(self.chip, self.pin, STOP_US, FREQ)
+            self.servo.value = 0   # stop
             if i < count - 1:
                 time.sleep(SHOT_PAUSE)
 
     def close(self):
-        lgpio.tx_servo(self.chip, self.pin, 0)
-        lgpio.gpiochip_close(self.chip)
+        self.servo.value = 0
+        self.servo.close()
