@@ -16,7 +16,7 @@ class MG996R:
     def fire(self, count=3):
         for i in range(count):
             self.servo.value = -1  # full CCW
-            time.sleep(90 / DEG_PER_SEC)
+            time.sleep(360 / DEG_PER_SEC)
             self.servo.value = 0   # stop
             if i < count - 1:
                 time.sleep(SHOT_PAUSE)

@@ -10,7 +10,11 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/' + package_name + '/launch', ['launch/aruco_launch.py'])
+        ('share/' + package_name + '/launch', [
+            'launch/aruco_launch.py',
+            'launch/laptop_launch.py',
+            'launch/rpi_launch.py',
+        ])
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -25,11 +29,12 @@ setup(
     },
     entry_points={
         'console_scripts': [
-        'camera_node = aruco_detection.aruco_detection:main',
-        'pnp_node = aruco_detection.aruco_detection_PNP:main',
-        'task_a_node = aruco_detection.Task_A_Main:main',
-        'task_b_node = aruco_detection.Task_B_Main:main',
-        'mission_manager = aruco_detection.docking_main:main',
-],
+            'camera_node = aruco_detection.aruco_detection:main',
+            'pnp_node = aruco_detection.aruco_detection_PNP:main',
+            'task_a_node = aruco_detection.Task_A_Main:main',
+            'task_b_node = aruco_detection.Task_B_Main:main',
+            'mission_manager = aruco_detection.docking_main:main',
+            'servo_node = aruco_detection.servo_node:main',
+        ],
     },
 )
