@@ -13,6 +13,7 @@ setup(
         ('share/' + package_name + '/launch', [
             'launch/aruco_launch.py',
             'launch/laptop_launch.py',
+            'launch/laptop_launch_no_nav.py',
             'launch/rpi_launch.py',
         ])
     ],
