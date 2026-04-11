@@ -85,7 +85,7 @@ class DockingBase(Node):
         marker_z = msg.pose.position.x   # forward depth
         marker_x = msg.pose.position.y   # lateral offset
 
-        if marker_z > 0.5:
+        if marker_z > 1.5:
             self.get_logger().info(f'Marker too far ({marker_z:.2f}m), waiting...')
             return
 
@@ -100,15 +100,18 @@ class DockingBase(Node):
             self.rotation_phase = 0
             self.state = 'rotating'
             self.get_logger().info(
-                f'Aligning: {math.degrees(self.angle_to_turn):.1f}°, '
-                f'then driving {self.distance_to_travel:.3f}m'
+                f'Marker at {marker_z:.2f}m forward, {marker_x:.2f}m sideways — '
+                f'aligning {math.degrees(self.angle_to_turn):.1f}°, then driving {self.distance_to_travel:.3f}m'
             )
         else:
             self.distance_to_travel = max(0.0, marker_z - self.stop_dist)
             self.start_x = self.current_x
             self.start_y = self.current_y
             self.state = 'driving_to_marker'
-            self.get_logger().info(f'Already aligned. Driving {self.distance_to_travel:.3f}m')
+            self.get_logger().info(
+                f'Marker at {marker_z:.2f}m forward, {marker_x:.2f}m sideways — '
+                f'already aligned, driving {self.distance_to_travel:.3f}m'
+            )
 
     # ------------------------------------------------------------------
     # Shared drive state machine
