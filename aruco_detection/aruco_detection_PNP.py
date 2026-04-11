@@ -14,12 +14,13 @@ class ArucoSub_Pub(Node):
         
         # Calibration data(need to change)(Assume 320x240 dimensions)
         self.mtx = np.array([
-            [282.5, 0.0, 160.0],
-            [0.0, 282.5, 120.0],
-            [0.0, 0.0, 1.0]], dtype=np.float32)
-        
-        # Constant(need to change)
-        self.dist = np.zeros((5, 1), dtype=np.float32)
+    [417.69,   0,    284.34],
+    [  0,    415.23, 274.56],
+    [  0,      0,      1  ]], dtype=np.float64)  # float64 not float32
+
+        self.dist = np.array([-0.06734759, 0.34449484, 0.0066658, -0.019645, -0.61514672], 
+                      dtype=np.float64).reshape(5, 1)
+
 
         #Measured with ruler(CHANGE!!!!!)
         self.marker_size = 0.2
