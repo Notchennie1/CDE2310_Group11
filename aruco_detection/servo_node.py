@@ -2,7 +2,7 @@ import threading
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Bool
-from servo import MG996R
+from aruco_detection.servo import MG996R
 
 
 class ServoNode(Node):

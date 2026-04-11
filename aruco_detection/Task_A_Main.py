@@ -2,7 +2,7 @@ import threading
 import rclpy
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Bool, String
-from docking_base import DockingBase
+from aruco_detection.docking_base import DockingBase
 
 
 class Task_A_Controller(DockingBase):

@@ -1,7 +1,7 @@
 import rclpy
 from geometry_msgs.msg import Twist, PoseStamped
 from std_msgs.msg import Bool, String
-from docking_base import DockingBase
+from aruco_detection.docking_base import DockingBase
 
 
 class Task_B_Controller(DockingBase):
