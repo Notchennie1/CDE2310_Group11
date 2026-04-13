@@ -14,9 +14,9 @@ class ArucoSub_Pub(Node):
         
         # Calibration data(need to change)(Assume 320x240 dimensions)
         self.mtx = np.array([
-    [417.69,   0,    284.34],
-    [  0,    415.23, 274.56],
-    [  0,      0,      1  ]], dtype=np.float64)  # float64 not float32
+    [264,   0,  160],
+    [  0, 264,  120],
+    [  0,   0,    1]], dtype=np.float64)  # float64 not float32
 
         self.dist = np.array([-0.06734759, 0.34449484, 0.0066658, -0.019645, -0.61514672], 
                       dtype=np.float64).reshape(5, 1)
