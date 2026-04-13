@@ -18,25 +18,29 @@ class DockingBase(Node):
         self.start_x = 0.0
         self.start_y = 0.0
         self.current_yaw = 0.0
-        self.start_yaw = 0.0
-
-        # Motion targets
-        self.distance_to_travel = 0.0
-        self.angle_to_turn = 0.0
 
         # State machine
+        # States: idle → aligning → driving → docked
         self.state = 'idle'
-        self.alignment_done = False   # False = standoff pass, True = final approach
 
-        # Tuning parameters
-        self.stop_dist = 0.40    # 10cm stop distance from marker
-        self.x_threshold = 0.02  # 2cm lateral alignment tolerance
-        self.lin_speed = 0.04    # 4cm/s
-        self.ang_speed = 0.2     # rad/s
+        # Tuning
+        self.stop_dist = 0.15        # how far from marker to stop (odom drive target)
+        self.x_threshold = 0.04     # lateral alignment tolerance in metres (~1.5cm)
+        self.lin_speed = 0.04        # forward speed m/s
+        self.ang_speed = 0.2         # max rotation speed rad/s
+        self.ang_kp = 1.5            # proportional gain for visual servo alignment
 
-        # Activation gate
+        # Drive target (set once aligned)
+        self.drive_distance = 0.0
+
+        # Activation
         self.is_active = False
-        self._logged_waiting = False  # throttle flag for not-active log
+        self._logged_waiting = False
+
+        # Latest marker reading
+        self.last_marker_z = 0.0
+        self.last_marker_x = 0.0
+        self.marker_visible = False
 
         # Publishers
         self.cmd_pub = self.create_publisher(Twist, 'cmd_vel', 10)
@@ -55,21 +59,16 @@ class DockingBase(Node):
             f'Waiting for activation...'
         )
 
-    # ------------------------------------------------------------------
-    # Activation gate — subclasses wire their own topic to this callback
-    # ------------------------------------------------------------------
     def active_cb(self, msg):
         self.is_active = msg.data
         if self.is_active:
             self._logged_waiting = False
-            self.get_logger().info('Activated — looking for marker...')
+            self.state = 'aligning'   # go straight to visual servo alignment
+            self.get_logger().info('Activated — aligning to marker...')
         else:
             self.get_logger().info('Deactivated.')
             self.stop_robot()
 
-    # ------------------------------------------------------------------
-    # Shared odometry handler
-    # ------------------------------------------------------------------
     def odom_callback(self, msg):
         self.current_x = msg.pose.pose.position.x
         self.current_y = msg.pose.pose.position.y
@@ -78,96 +77,64 @@ class DockingBase(Node):
         cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
         self.current_yaw = math.atan2(siny_cosp, cosy_cosp)
 
-    # ------------------------------------------------------------------
-    # Shared marker callback — only reacts to dock_marker_id
-    # ------------------------------------------------------------------
     def marker_callback(self, msg):
         marker_id = int(msg.pose.orientation.w)
-
         if marker_id != self.dock_marker_id:
             return
         if not self.is_active:
             if not self._logged_waiting:
                 self.get_logger().info(
-                    f'Marker ID {marker_id} detected but node not active — '
-                    f'publish /task_a_active or /task_b_active to start'
+                    f'Marker {marker_id} seen but not active yet.'
                 )
                 self._logged_waiting = True
             return
-        if self.state != 'idle':
-            return
 
-        marker_z = msg.pose.position.x   # forward depth
-        marker_x = msg.pose.position.y   # lateral offset
+        self.last_marker_z = msg.pose.position.x   # forward depth
+        self.last_marker_x = msg.pose.position.y   # lateral offset
+        self.marker_visible = True
 
-        if marker_z > 1.5:
-            self.get_logger().info(f'Marker too far ({marker_z:.2f}m), waiting...')
-            return
-
-        if abs(marker_x) > 0.5:
-            self.get_logger().info(f'Marker too far sideways ({marker_x:.2f}m), waiting...')
-            return
-
-        # Step 1: standoff pass — drive to 0.5m in front of marker
-        # Step 2: final approach — drive to stop_dist
-        target_dist = self.stop_dist if self.alignment_done else 0.5
-        step_label = 'final approach' if self.alignment_done else 'standoff pass'
-
-        if abs(marker_x) > self.x_threshold:
-            self.angle_to_turn = math.atan2(marker_x, marker_z)
-            self.distance_to_travel = max(0.0, marker_z - target_dist)
-            self.start_yaw = self.current_yaw
-            self.state = 'rotating'
-            self.get_logger().info(
-                f'[{step_label}] Marker at {marker_z:.2f}m forward, {marker_x:.2f}m sideways — '
-                f'aligning {math.degrees(self.angle_to_turn):.1f}°, then driving {self.distance_to_travel:.3f}m'
-            )
-        else:
-            self.distance_to_travel = max(0.0, marker_z - target_dist)
-            self.start_x = self.current_x
-            self.start_y = self.current_y
-            self.state = 'driving_to_marker'
-            self.get_logger().info(
-                f'[{step_label}] Marker at {marker_z:.2f}m forward, {marker_x:.2f}m sideways — '
-                f'already aligned, driving {self.distance_to_travel:.3f}m'
-            )
-
-    # ------------------------------------------------------------------
-    # Shared drive state machine
-    # ------------------------------------------------------------------
     def drive_callback(self):
         if not self.is_active:
             self.state = 'idle'
             return
 
-        if self.state == 'rotating':
-            yaw_traveled = self._angle_diff(self.current_yaw, self.start_yaw)
+        # ── PHASE 1: visual servo — rotate only until laterally aligned ──
+        if self.state == 'aligning':
+            if not self.marker_visible:
+                self.cmd_pub.publish(Twist())
+                return
 
-            if abs(yaw_traveled) >= abs(self.angle_to_turn):
-                self.get_logger().info('Aligned to marker! Driving in...')
-                self.state = 'driving_to_marker'
+            x_err = self.last_marker_x
+            self.marker_visible = False   # consume reading
+
+            if abs(x_err) <= self.x_threshold:
+                # Aligned — lock in the drive distance and switch to odom drive
+                self.drive_distance = max(0.0, self.last_marker_z - self.stop_dist)
                 self.start_x = self.current_x
                 self.start_y = self.current_y
+                self.state = 'driving'
+                self.get_logger().info(
+                    f'Aligned! Marker at {self.last_marker_z:.3f}m — '
+                    f'driving {self.drive_distance:.3f}m forward.'
+                )
             else:
+                # Proportional rotation, clamped to ang_speed
                 cmd = Twist()
-                cmd.angular.z = -self.ang_speed if self.angle_to_turn > 0 else self.ang_speed
+                cmd.angular.z = max(-self.ang_speed,
+                                    min(self.ang_speed, self.ang_kp * x_err))
                 self.cmd_pub.publish(cmd)
 
-        elif self.state == 'driving_to_marker':
+        # ── PHASE 2: odom straight drive ──
+        elif self.state == 'driving':
             dist_traveled = math.sqrt(
                 (self.current_x - self.start_x) ** 2 +
                 (self.current_y - self.start_y) ** 2
             )
-            if dist_traveled >= self.distance_to_travel:
+            if dist_traveled >= self.drive_distance:
                 self.cmd_pub.publish(Twist())
-                if not self.alignment_done:
-                    self.get_logger().info('Standoff reached — re-acquiring marker for final approach.')
-                    self.alignment_done = True
-                    self.state = 'idle'
-                else:
-                    self.get_logger().info('Final approach complete. Docked.')
-                    self.state = 'docked'
-                    self.on_docked()
+                self.get_logger().info('Docked!')
+                self.state = 'docked'
+                self.on_docked()
             else:
                 cmd = Twist()
                 cmd.linear.x = self.lin_speed
@@ -176,23 +143,14 @@ class DockingBase(Node):
         elif self.state == 'docked':
             self.cmd_pub.publish(Twist())
 
-    # ------------------------------------------------------------------
-    # Hook — subclasses override to implement task-specific behaviour
-    # ------------------------------------------------------------------
     def on_docked(self):
         pass
 
-    # ------------------------------------------------------------------
-    # Shared stop
-    # ------------------------------------------------------------------
     def stop_robot(self):
         self.state = 'idle'
-        self.alignment_done = False
+        self.marker_visible = False
         self.cmd_pub.publish(Twist())
 
-    # ------------------------------------------------------------------
-    # Angle utility
-    # ------------------------------------------------------------------
     def _angle_diff(self, current, start):
         diff = current - start
         while diff > math.pi:

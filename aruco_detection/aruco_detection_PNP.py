@@ -19,8 +19,8 @@ class ArucoSub_Pub(Node):
         self.mtx = data['mtx']
         self.dist = data['dist']
 
-        # Outer border size: 93mm
-        self.marker_size = 0.1
+        # Outer border size: 125mm
+        self.marker_size = 0.125
 
         self.obj_points = np.array([
         [-self.marker_size/2,  self.marker_size/2, 0],

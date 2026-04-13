@@ -135,8 +135,8 @@ class MissionManager(Node):
                 self._publish_task_active(True)
                 return
 
-            goal_x = target_x + (0.35 * dx / dist)
-            goal_y = target_y + (0.35 * dy / dist)
+            goal_x = target_x + (0.6 * dx / dist)
+            goal_y = target_y + (0.6 * dy / dist)
             angle = math.atan2(target_y - goal_y, target_x - goal_x)
 
             self.get_logger().info(

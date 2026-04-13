@@ -1,4 +1,5 @@
 from setuptools import find_packages, setup
+import os
 
 package_name = 'aruco_detection'
 
@@ -15,7 +16,9 @@ setup(
             'launch/laptop_launch.py',
             'launch/laptop_launch_no_nav.py',
             'launch/rpi_launch.py',
-        ])
+        ]),
+        (os.path.join('lib', 'python3.10', 'site-packages', 'aruco_detection'),
+            ['aruco_detection/camera_calibration.npz']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -24,9 +27,7 @@ setup(
     description='TODO: Package description',
     license='TODO: License declaration',
     extras_require={
-        'test': [
-            'pytest',
-        ],
+        'test': ['pytest'],
     },
     entry_points={
         'console_scripts': [
