@@ -141,14 +141,14 @@ class MissionManager(Node):
             self.get_logger().info(f'Robot: ({robot_x:.2f}, {robot_y:.2f})')
             self.get_logger().info(f'Target: ({target_x:.2f}, {target_y:.2f}), dist: {dist:.2f}m')
 
-            if dist < 0.1:
+            if dist < 0.3:
                 self.get_logger().warn('Already close enough, skipping approach nav — starting task directly')
                 self.state = 'DOCKING'
                 self._publish_task_active(True)
                 return
 
-            goal_x = target_x + (0.6 * dx / dist)
-            goal_y = target_y + (0.6 * dy / dist)
+            goal_x = target_x + (0.3 * dx / dist)
+            goal_y = target_y + (0.3 * dy / dist)
             angle = math.atan2(target_y - goal_y, target_x - goal_x)
 
             self.get_logger().info(
