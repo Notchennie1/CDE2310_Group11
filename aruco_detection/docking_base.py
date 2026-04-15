@@ -29,13 +29,13 @@ class DockingNode(Node):
         self.state = 'idle'
 
         # Tuning
-        self.stop_dist = 0.05
+        self.stop_dist = 0.01
         self.lin_speed = 0.06
         self.ang_gain = 2.0
         self.ang_speed = 0.3
         self.marker_timeout = 0.3
-        self.align_tolerance = 0.08     # radians (~5 deg)
-        self.reach_tolerance = 0.03     # meters — "arrived" at normal line point
+        self.align_tolerance = 0.03     # radians (~5 deg)
+        self.reach_tolerance = 0.02     # meters — "arrived" at normal line point
         self.dock_timeout = 60.0
 
         # Latest marker data
@@ -195,7 +195,13 @@ class DockingNode(Node):
             yaw_err = self._norm(target_yaw - self.current_yaw)
 
             cmd = Twist()
-            cmd.linear.x = min(self.lin_speed, 0.4 * dist)
+            # Turn in place until roughly aligned, then drive straight. Avoids
+            # the wide tangential arc where the camera swings away from the
+            # marker.
+            if abs(yaw_err) > 0.2:  # ~11°
+                cmd.linear.x = 0.0
+            else:
+                cmd.linear.x = min(self.lin_speed, 0.4 * dist)
             cmd.angular.z = max(-self.ang_speed, min(self.ang_speed, self.ang_gain * yaw_err))
             self.cmd_pub.publish(cmd)
             return
