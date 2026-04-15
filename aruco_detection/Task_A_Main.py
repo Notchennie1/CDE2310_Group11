@@ -1,23 +1,29 @@
 import threading
 import rclpy
-from geometry_msgs.msg import Twist
+from rclpy.node import Node
 from std_msgs.msg import Bool, String
-from aruco_detection.docking_base import DockingBase
 
 
-class Task_A_Controller(DockingBase):
+class Task_A_Controller(Node):
     def __init__(self):
-        super().__init__('task_a_node', dock_marker_id=1)
-        self.create_subscription(Bool, '/task_a_active', self.active_cb, 10)
+        super().__init__('task_a_node')
 
-        # Shot sequencing
         self.shots_fired = 0
         self.total_shots = 3
         self.shot_interval = 5.0  # seconds between shots
         self.firing = False
 
-    def on_docked(self):
-        self.fire_sequence()
+        self.fire_pub = self.create_publisher(Bool, '/fire', 10)
+        self.status_pub = self.create_publisher(String, 'task_status', 10)
+
+        self.create_subscription(Bool, '/task_a_active', self.active_cb, 10)
+
+        self.get_logger().info('Task A node ready — waiting for /task_a_active...')
+
+    def active_cb(self, msg):
+        if msg.data:
+            self.get_logger().info('Activated — starting fire sequence')
+            self.fire_sequence()
 
     def fire_sequence(self):
         if self.firing:
@@ -40,12 +46,6 @@ class Task_A_Controller(DockingBase):
         msg = String()
         msg.data = 'SUCCESS'
         self.status_pub.publish(msg)
-        self.stop_robot()
-
-    def stop_robot(self):
-        super().stop_robot()
-        self.shots_fired = 0
-        self.firing = False
 
 
 def main(args=None):
@@ -56,9 +56,9 @@ def main(args=None):
     except KeyboardInterrupt:
         node.get_logger().info('Manual Shutdown')
     finally:
-        node.cmd_pub.publish(Twist())
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == '__main__':

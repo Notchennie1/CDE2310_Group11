@@ -23,9 +23,10 @@ class MissionManager(Node):
         self.tf_buffer = Buffer(cache_time=rclpy.duration.Duration(seconds=5))
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
-        self.exp_active_pub  = self.create_publisher(Bool, 'explore/resume', 10)
-        self.task_a_pub      = self.create_publisher(Bool, '/task_a_active', 10)
-        self.task_b_pub      = self.create_publisher(Bool, '/task_b_active', 10)
+        self.exp_active_pub   = self.create_publisher(Bool, 'explore/resume', 10)
+        self.dock_pub         = self.create_publisher(Bool, '/dock_active', 10)
+        self.task_a_pub       = self.create_publisher(Bool, '/task_a_active', 10)
+        self.task_b_pub       = self.create_publisher(Bool, '/task_b_active', 10)
         self.initial_pose_pub = self.create_publisher(PoseWithCovarianceStamped, '/initialpose', 10)
 
         self.create_subscription(PoseStamped, 'target_3d', self.aruco_callback, 10)
@@ -65,20 +66,13 @@ class MissionManager(Node):
         self.exp_active_pub.publish(Bool(data=True))
         self.get_logger().info('Exploration started')
 
-    def _publish_task_active(self, value: bool):
-        msg = Bool(data=value)
-        if self.detected_marker_id == 1:
-            self.task_a_pub.publish(msg)
-        elif self.detected_marker_id == 2:
-            self.task_b_pub.publish(msg)
-
     def aruco_callback(self, msg):
         marker_id = int(msg.pose.orientation.w)
 
         if marker_id not in self.target_ids:
             return
 
-        if self.state == 'DOCKING':
+        if self.state == 'DOCKING' or self.state == 'TASKING':
             return
 
         try:
@@ -141,14 +135,14 @@ class MissionManager(Node):
             self.get_logger().info(f'Robot: ({robot_x:.2f}, {robot_y:.2f})')
             self.get_logger().info(f'Target: ({target_x:.2f}, {target_y:.2f}), dist: {dist:.2f}m')
 
-            if dist < 0.3:
-                self.get_logger().warn('Already close enough, skipping approach nav — starting task directly')
+            if dist < 0.4:
+                self.get_logger().warn('Already close enough, skipping approach nav — starting docking')
                 self.state = 'DOCKING'
-                self._publish_task_active(True)
+                self.dock_pub.publish(Bool(data=True))
                 return
 
-            goal_x = target_x + (0.3 * dx / dist)
-            goal_y = target_y + (0.3 * dy / dist)
+            goal_x = target_x + (0.4 * dx / dist)
+            goal_y = target_y + (0.4 * dy / dist)
             angle = math.atan2(target_y - goal_y, target_x - goal_x)
 
             self.get_logger().info(
@@ -213,20 +207,32 @@ class MissionManager(Node):
         except Exception as e:
             self.get_logger().warn(f'Could not verify position after approach: {e}')
 
-        task_label = 'A' if self.detected_marker_id == 1 else 'B'
-        self.get_logger().info(f'Approach complete. Starting Task {task_label} docking...')
+        self.get_logger().info('Approach complete. Starting docking...')
         self.state = 'DOCKING'
-        self._publish_task_active(True)
+        self.dock_pub.publish(Bool(data=True))
 
     def explore_status_cb(self, msg):
         if msg.status == ExploreStatus.EXPLORATION_COMPLETE and self.state == 'SEARCHING':
             self.get_logger().info('Exploration complete — all frontiers exhausted. Mission done.')
 
     def task_status_cb(self, msg):
-        if msg.data == 'SUCCESS' and self.state == 'DOCKING':
+        if msg.data == 'DOCKED' and self.state == 'DOCKING':
+            self.dock_pub.publish(Bool(data=False))
+            task_label = 'A' if self.detected_marker_id == 1 else 'B'
+            self.get_logger().info(f'Docking complete. Activating Task {task_label}...')
+            self.state = 'TASKING'
+            if self.detected_marker_id == 1:
+                self.task_a_pub.publish(Bool(data=True))
+            else:
+                self.task_b_pub.publish(Bool(data=True))
+
+        elif msg.data == 'SUCCESS' and self.state == 'TASKING':
             task_label = 'A' if self.detected_marker_id == 1 else 'B'
             self.get_logger().info(f'Task {task_label} complete. Resuming exploration...')
-            self._publish_task_active(False)
+            if self.detected_marker_id == 1:
+                self.task_a_pub.publish(Bool(data=False))
+            else:
+                self.task_b_pub.publish(Bool(data=False))
             self.reset_to_explore()
 
     def reset_to_explore(self):

@@ -1,29 +1,38 @@
 import rclpy
-from geometry_msgs.msg import Twist, PoseStamped
+from rclpy.node import Node
+from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import Bool, String
-from aruco_detection.docking_base import DockingBase
 
 
-class Task_B_Controller(DockingBase):
+class Task_B_Controller(Node):
     def __init__(self):
-        super().__init__('task_b_node', dock_marker_id=2)
-        self.create_subscription(Bool, '/task_b_active', self.active_cb, 10)
+        super().__init__('task_b_node')
 
         self.shots_fired = 0
+        self.tracking = False
 
+        self.fire_pub = self.create_publisher(Bool, '/fire', 10)
+        self.status_pub = self.create_publisher(String, 'task_status', 10)
+
+        self.create_subscription(Bool, '/task_b_active', self.active_cb, 10)
         self.create_subscription(PoseStamped, 'target_3d', self._pendulum_callback, 10)
 
-    def on_docked(self):
-        self.state = 'tracking'
-        self.shots_fired = 0
-        self.get_logger().info('Docked — waiting for pendulum marker (ID 3)')
+        self.get_logger().info('Task B node ready — waiting for /task_b_active...')
+
+    def active_cb(self, msg):
+        if msg.data:
+            self.tracking = True
+            self.shots_fired = 0
+            self.get_logger().info('Activated — waiting for pendulum marker (ID 3)')
+        else:
+            self.tracking = False
 
     def _pendulum_callback(self, msg):
         marker_id = int(msg.pose.orientation.w)
 
         if marker_id != 3:
             return
-        if self.state != 'tracking':
+        if not self.tracking:
             return
         if self.shots_fired >= 3:
             return
@@ -34,14 +43,10 @@ class Task_B_Controller(DockingBase):
 
         if self.shots_fired == 3:
             self.get_logger().info('All shots fired. Reporting SUCCESS.')
+            self.tracking = False
             msg_out = String()
             msg_out.data = 'SUCCESS'
             self.status_pub.publish(msg_out)
-            self.stop_robot()
-
-    def stop_robot(self):
-        super().stop_robot()
-        self.shots_fired = 0
 
 
 def main(args=None):
@@ -52,9 +57,9 @@ def main(args=None):
     except KeyboardInterrupt:
         node.get_logger().info('Manual Shutdown')
     finally:
-        node.cmd_pub.publish(Twist())
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == '__main__':
