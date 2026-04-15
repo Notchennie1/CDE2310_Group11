@@ -244,11 +244,13 @@ class DockingBase(Node):
         self.current_yaw = 0.0
 
         # State machine:
-        # idle -> fix_lateral -> fix_yaw -> visual_servo -> odom_drive -> docked
+        # idle -> fix_lateral -> fix_yaw -> visual_servo -> pre_dock_align -> dock_approach -> docked
+        #                                                         (odom_drive fallback on dock_approach)
         self.state = 'idle'
 
         # Tuning
         self.stop_dist = 0.10
+        self.standoff_dist = 0.30     # stop this far in front of the marker before squaring up
         self.lateral_threshold = 0.05  
         self.yaw_threshold = 0.05      
         self.x_threshold = 0.04        
@@ -335,9 +337,10 @@ class DockingBase(Node):
 
         # Take the snapshots once during Step 1
         if self.state == 'fix_lateral' and self.target_yaw_step1 is None:
-            # Angle needed to point the nose exactly at the marker
-            angle_to_marker = math.atan2(self.last_marker_x, self.last_marker_z)
-            self.target_yaw_step1 = self._normalize_angle(self.current_yaw + angle_to_marker)
+            # Aim at the standoff point (in front of marker), not the marker itself
+            angle_to_standoff = math.atan2(self.last_marker_x,
+                                           max(self.last_marker_z - self.standoff_dist, 0.1))
+            self.target_yaw_step1 = self._normalize_angle(self.current_yaw + angle_to_standoff)
             
             # Angle needed to be parallel/square with the dock face
             self.target_yaw_step2 = self._normalize_angle(self.target_yaw_step1 + self.last_marker_rvec_y)
@@ -394,8 +397,69 @@ class DockingBase(Node):
             cmd.angular.z = max(-self.ang_speed, min(self.ang_speed, 1.5 * error))
             self.cmd_pub.publish(cmd)
 
-        # ── STEP 3: Visual Servo (Live) ──
+        # ── STEP 3: Drive to standoff point in front of marker ──
         elif self.state == 'visual_servo':
+            marker_age = (now - self.last_marker_time) if self.last_marker_time else 999
+
+            if marker_age > self.marker_timeout:
+                self.aligned_count = 0
+                self.cmd_pub.publish(Twist())
+                self.get_logger().warn('Visual servo: marker lost — waiting...')
+                return
+
+            z, x = self.last_marker_z, self.last_marker_x
+
+            if z <= self.standoff_dist:
+                self.cmd_pub.publish(Twist())
+                self.get_logger().info(
+                    f'Reached standoff at {z:.3f}m — rotating to face marker squarely...'
+                )
+                self.aligned_count = 0
+                self.state = 'pre_dock_align'
+                return
+
+            cmd = Twist()
+            cmd.angular.z = max(-self.ang_speed, min(self.ang_speed, 2.0 * x))
+
+            if abs(x) > self.x_threshold:
+                cmd.linear.x = 0.02
+                self.aligned_count = 0
+            else:
+                self.aligned_count += 1
+                cmd.linear.x = min(self.lin_speed, max(0.02, 0.3 * (z - self.standoff_dist)))
+                self.get_logger().info(
+                    f'Approaching standoff ({self.aligned_count}/{self.aligned_frames_needed}) z={z:.3f}m'
+                )
+
+            self.cmd_pub.publish(cmd)
+
+        # ── STEP 4: At standoff — rotate to face marker squarely ──
+        elif self.state == 'pre_dock_align':
+            marker_age = (now - self.last_marker_time) if self.last_marker_time else 999
+
+            if marker_age > self.marker_timeout:
+                self.cmd_pub.publish(Twist())
+                self.get_logger().warn('Pre-dock align: waiting for marker...')
+                return
+
+            x, z = self.last_marker_x, self.last_marker_z
+            angle_error = math.atan2(x, z)
+
+            if abs(angle_error) < self.yaw_threshold:
+                self.cmd_pub.publish(Twist())
+                self.get_logger().info('Facing marker squarely — starting straight-on approach...')
+                self.aligned_count = 0
+                self.state = 'dock_approach'
+                return
+
+            cmd = Twist()
+            cmd.linear.x = 0.0
+            cmd.angular.z = max(-self.ang_speed, min(self.ang_speed, 1.5 * angle_error))
+            self.cmd_pub.publish(cmd)
+            self.get_logger().info(f'Pre-dock align: angle={math.degrees(angle_error):.1f}° x={x:.3f}m')
+
+        # ── STEP 5: Straight-on final approach ──
+        elif self.state == 'dock_approach':
             marker_age = (now - self.last_marker_time) if self.last_marker_time else 999
 
             if marker_age > self.marker_timeout:
@@ -408,6 +472,7 @@ class DockingBase(Node):
                 else:
                     self.aligned_count = 0
                     self.cmd_pub.publish(Twist())
+                    self.get_logger().warn('Dock approach: marker lost — waiting...')
                 return
 
             z, x = self.last_marker_z, self.last_marker_x
@@ -428,11 +493,11 @@ class DockingBase(Node):
             else:
                 self.aligned_count += 1
                 cmd.linear.x = min(self.lin_speed, max(0.02, 0.3 * (z - self.stop_dist)))
-                self.get_logger().info(f'Aligned ({self.aligned_count}/{self.aligned_frames_needed}) z={z:.3f}m')
+                self.get_logger().info(f'Dock approach ({self.aligned_count}/{self.aligned_frames_needed}) z={z:.3f}m')
 
             self.cmd_pub.publish(cmd)
 
-        # ── STEP 4: Odom straight drive ──
+        # ── STEP 6: Odom straight drive fallback ──
         elif self.state == 'odom_drive':
             dist = math.sqrt((self.current_x - self.start_x)**2 + (self.current_y - self.start_y)**2)
             if dist >= self.drive_distance:
