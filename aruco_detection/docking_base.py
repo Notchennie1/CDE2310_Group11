@@ -75,15 +75,17 @@ class DockingNode(Node):
             self.last_marker_bearing = msg.data
 
     def active_cb(self, msg):
+        was_active = self.is_active
         self.is_active = msg.data
-        if self.is_active:
+        if self.is_active and not was_active:
+            # Rising edge — fresh docking attempt
             self.dock_marker_id = None
             self.last_marker_time = None
             self.state = 'docking'
             self.odom_substate = 'approach'
             self.dock_activated_time = self.get_clock().now().nanoseconds / 1e9
             self.get_logger().info('Activated')
-        else:
+        elif not self.is_active and was_active:
             self.state = 'idle'
             self.dock_activated_time = None
             self._stop_cmd()
@@ -157,12 +159,14 @@ class DockingNode(Node):
         # ── Visual Servo (marker visible) ───────────────────────────────────────
         if self.state == 'docking':
             if marker_age > self.marker_timeout:
-                # Marker lost close up — switch to normal approach
-                if self.last_marker_time and 0.0 < self.last_marker_z < 0.4:
+                # Marker lost — switch to normal approach using last sighting
+                if self.last_marker_time and self.last_marker_z > 0.0:
                     self._calculate_normal_approach()
                     self.state = 'odom_drive'
                     self.odom_substate = 'approach'
-                    self.get_logger().info('Switching to normal approach')
+                    self.get_logger().info(
+                        f'Marker lost at z={self.last_marker_z:.2f}m, '
+                        f'switching to normal approach (final_dist={self.final_dist:.2f}m)')
                 else:
                     self._stop_cmd()
                 return
