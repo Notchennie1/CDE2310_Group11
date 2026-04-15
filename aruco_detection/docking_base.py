@@ -35,7 +35,8 @@ class DockingNode(Node):
         self.ang_speed = 0.3
         self.marker_timeout = 0.3
         self.align_tolerance = 0.03     # radians (~5 deg)
-        self.reach_tolerance = 0.01     # meters — "arrived" at normal line point
+        self.reach_tolerance = 0.03     # meters — "arrived" at normal line point
+        self.min_lin_speed = 0.03       # floor to overcome static friction
         self.dock_timeout = 60.0
 
         # Latest marker data
@@ -211,7 +212,7 @@ class DockingNode(Node):
 
             # Phase 2: drive straight. Light yaw correction to counter drift,
             # but we keep moving forward — don't re-enter pivot mode.
-            cmd.linear.x = min(self.lin_speed, 0.4 * dist)
+            cmd.linear.x = min(self.lin_speed, max(self.min_lin_speed, 0.4 * dist))
             cmd.angular.z = max(-self.ang_speed, min(self.ang_speed, self.ang_gain * yaw_err))
             self.cmd_pub.publish(cmd)
             return
