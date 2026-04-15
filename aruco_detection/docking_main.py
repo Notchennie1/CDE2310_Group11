@@ -4,6 +4,8 @@ from std_msgs.msg import Bool, String
 from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
 from nav2_msgs.action import NavigateToPose
 from rclpy.action import ActionClient
+from rclpy.qos import QoSProfile, DurabilityPolicy
+from explore_lite_msgs.msg import ExploreStatus
 import math
 from tf2_ros import Buffer, TransformListener
 from tf2_geometry_msgs import do_transform_pose
@@ -21,13 +23,19 @@ class MissionManager(Node):
         self.tf_buffer = Buffer(cache_time=rclpy.duration.Duration(seconds=5))
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
-        self.exp_active_pub  = self.create_publisher(Bool, '/explorer_active', 10)
+        self.exp_active_pub  = self.create_publisher(Bool, 'explore/resume', 10)
         self.task_a_pub      = self.create_publisher(Bool, '/task_a_active', 10)
         self.task_b_pub      = self.create_publisher(Bool, '/task_b_active', 10)
         self.initial_pose_pub = self.create_publisher(PoseWithCovarianceStamped, '/initialpose', 10)
 
         self.create_subscription(PoseStamped, 'target_3d', self.aruco_callback, 10)
         self.create_subscription(String, 'task_status', self.task_status_cb, 10)
+
+        status_qos = QoSProfile(
+            depth=1,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL
+        )
+        self.create_subscription(ExploreStatus, 'explore/status', self.explore_status_cb, status_qos)
 
         self.nav_client = ActionClient(self, NavigateToPose, 'navigate_to_pose')
 
@@ -54,6 +62,8 @@ class MissionManager(Node):
         self.initial_pose_pub.publish(msg)
         self.initial_pose_published = True
         self.get_logger().info('Initial pose published')
+        self.exp_active_pub.publish(Bool(data=True))
+        self.get_logger().info('Exploration started')
 
     def _publish_task_active(self, value: bool):
         msg = Bool(data=value)
@@ -68,7 +78,7 @@ class MissionManager(Node):
         if marker_id not in self.target_ids:
             return
 
-        if self.state != 'SEARCHING':
+        if self.state == 'DOCKING':
             return
 
         try:
@@ -109,6 +119,8 @@ class MissionManager(Node):
                         self._goal_handle = None
                     self.approach_in_progress = False
                     self.start_approach(new_x, new_y)
+                elif not self.approach_in_progress:
+                    self.start_approach(self.target_x_map, self.target_y_map)
 
         except Exception as e:
             self.get_logger().warn(f'TF lookup failed: {e}')
@@ -206,6 +218,10 @@ class MissionManager(Node):
         self.state = 'DOCKING'
         self._publish_task_active(True)
 
+    def explore_status_cb(self, msg):
+        if msg.status == ExploreStatus.EXPLORATION_COMPLETE and self.state == 'SEARCHING':
+            self.get_logger().info('Exploration complete — all frontiers exhausted. Mission done.')
+
     def task_status_cb(self, msg):
         if msg.data == 'SUCCESS' and self.state == 'DOCKING':
             task_label = 'A' if self.detected_marker_id == 1 else 'B'
@@ -233,7 +249,8 @@ def main():
         node.get_logger().info('Manual Shutdown')
     finally:
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == '__main__':
