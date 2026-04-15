@@ -45,6 +45,12 @@ class MissionManager(Node):
         self._goal_handle = None
         self.approach_in_progress = False
 
+        # Docking watchdog: if docking_base never reports back within this window,
+        # assume it's dead/stuck and reset to exploration.
+        self.docking_start_time = None
+        self.docking_timeout = 75.0
+        self.create_timer(1.0, self._docking_watchdog)
+
         self.initial_pose_published = False
         self.create_timer(1.0, self.publish_initial_pose_once)
 
@@ -67,7 +73,15 @@ class MissionManager(Node):
         self.get_logger().info('Exploration started')
 
     def aruco_callback(self, msg):
-        marker_id = int(msg.pose.orientation.w)
+        # frame_id is "camera_link:<id>" — split the id off before TF lookup.
+        parts = msg.header.frame_id.split(':', 1)
+        if len(parts) != 2:
+            return
+        tf_frame = parts[0]
+        try:
+            marker_id = int(parts[1])
+        except ValueError:
+            return
 
         if marker_id not in self.target_ids:
             return
@@ -78,7 +92,7 @@ class MissionManager(Node):
         try:
             t = self.tf_buffer.lookup_transform(
                 'map',
-                msg.header.frame_id,
+                tf_frame,
                 rclpy.time.Time(),
                 timeout=rclpy.duration.Duration(seconds=0.1)
             )
@@ -138,6 +152,7 @@ class MissionManager(Node):
             if dist < 0.4:
                 self.get_logger().warn('Already close enough, skipping approach nav — starting docking')
                 self.state = 'DOCKING'
+                self.docking_start_time = self.get_clock().now().nanoseconds / 1e9
                 self.dock_pub.publish(Bool(data=True))
                 return
 
@@ -209,6 +224,7 @@ class MissionManager(Node):
 
         self.get_logger().info('Approach complete. Starting docking...')
         self.state = 'DOCKING'
+        self.docking_start_time = self.get_clock().now().nanoseconds / 1e9
         self.dock_pub.publish(Bool(data=True))
 
     def explore_status_cb(self, msg):
@@ -218,6 +234,7 @@ class MissionManager(Node):
     def task_status_cb(self, msg):
         if msg.data == 'DOCKED' and self.state == 'DOCKING':
             self.dock_pub.publish(Bool(data=False))
+            self.docking_start_time = None
             task_label = 'A' if self.detected_marker_id == 1 else 'B'
             self.get_logger().info(f'Docking complete. Activating Task {task_label}...')
             self.state = 'TASKING'
@@ -225,6 +242,12 @@ class MissionManager(Node):
                 self.task_a_pub.publish(Bool(data=True))
             else:
                 self.task_b_pub.publish(Bool(data=True))
+
+        elif msg.data == 'DOCK_FAILED' and self.state == 'DOCKING':
+            self.get_logger().warn('docking_base reported DOCK_FAILED — resetting')
+            self.dock_pub.publish(Bool(data=False))
+            self.docking_start_time = None
+            self.reset_to_explore()
 
         elif msg.data == 'SUCCESS' and self.state == 'TASKING':
             task_label = 'A' if self.detected_marker_id == 1 else 'B'
@@ -242,8 +265,20 @@ class MissionManager(Node):
         self.detected_marker_id = None
         self._goal_handle = None
         self.approach_in_progress = False
+        self.docking_start_time = None
         self.exp_active_pub.publish(Bool(data=True))
         self.get_logger().info('Back to SEARCHING')
+
+    def _docking_watchdog(self):
+        if self.state != 'DOCKING' or self.docking_start_time is None:
+            return
+        elapsed = self.get_clock().now().nanoseconds / 1e9 - self.docking_start_time
+        if elapsed > self.docking_timeout:
+            self.get_logger().warn(
+                f'Docking watchdog tripped after {elapsed:.1f}s — resetting'
+            )
+            self.dock_pub.publish(Bool(data=False))
+            self.reset_to_explore()
 
 
 def main():

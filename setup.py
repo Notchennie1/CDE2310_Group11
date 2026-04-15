@@ -13,7 +13,6 @@ setup(
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch', [
             'launch/laptop_launch_no_nav.py',
-            'launch/rpi_launch.py',
             'launch/laptop.launch.py',
             'launch/rpi.launch.py',
         ]),

@@ -42,32 +42,31 @@ class ArucoSub_Pub(Node):
             self.obj_points, corners, self.mtx, self.dist, flags=cv2.SOLVEPNP_IPPE_SQUARE)
 
         if success:
+            
             R, _ = cv2.Rodrigues(rvec)
-            normal_cam = R @ np.array([0.0, 0.0, 1.0])
-            # Remap to robot frame (same mapping as tvec)
-            normal_robot_x = normal_cam[2]    # camera Z → robot X (forward)
-            normal_robot_y = -normal_cam[0]   # camera X → robot Y (lateral)
+
+            # Use -1.0 to get the vector pointing FROM the marker TO the camera
+            normal_cam = R @ np.array([0.0, 0.0, -1.0])
+
+            normal_robot_x = normal_cam[2]
+            normal_robot_y = -normal_cam[0]
+
+            # 0 = marker faces away from robot, ±pi = marker faces the robot
             angle_rad = np.arctan2(normal_robot_y, normal_robot_x)
             angle_deg = float(np.degrees(angle_rad))
 
-            self.publish_pose(tvec, rvec, marker_id, angle_deg)
-            print(f"Marker id = {marker_id}, normal angle = {angle_deg:.2f} deg")
+            self.publish_pose(tvec, marker_id, angle_deg)
 
-    def publish_pose(self, tvec, rvec, id, angle_deg):
+    def publish_pose(self, tvec, marker_id, angle_deg):
         pose_msg = PoseStamped()
-
-        pose_msg.header.frame_id = "camera_link"
+        # Encode marker id in the frame_id so consumers can associate id with
+        # pose atomically (no cross-topic ordering race). Consumers split on ':'.
+        pose_msg.header.frame_id = f"camera_link:{marker_id}"
         pose_msg.header.stamp = self.get_clock().now().to_msg()
         pose_msg.pose.position.x = float(tvec[2][0])
         pose_msg.pose.position.y = -float(tvec[0][0])
         pose_msg.pose.position.z = -float(tvec[1][0])
-
-
-        pose_msg.pose.orientation.x = float(rvec[0][0])
-        pose_msg.pose.orientation.y = float(rvec[1][0])
-        pose_msg.pose.orientation.z = float(rvec[2][0])
-        pose_msg.pose.orientation.w = float(id)
-
+        pose_msg.pose.orientation.w = 1.0
         self.publisher_.publish(pose_msg)
 
         angle_msg = Float32()

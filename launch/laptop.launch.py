@@ -40,6 +40,22 @@ def generate_launch_description():
         output='screen'
     )
 
+    # Broadcast camera_link relative to base_link so map→camera_link TF chain
+    # resolves for mission_manager's target_3d transforms.
+    camera_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='camera_tf',
+        arguments=['0.04', '0.08', '0.15', '0', '0', '0', 'base_link', 'camera_link']
+    )
+
+    pnp_node = Node(
+        package='aruco_detection',
+        executable='pnp_node',
+        name='pnp_node',
+        output='screen'
+    )
+
     mission_manager = Node(
         package='aruco_detection',
         executable='mission_manager',
@@ -72,6 +88,8 @@ def generate_launch_description():
         cartographer,
         nav2,
         explorer,
+        camera_tf,
+        pnp_node,
         mission_manager,
         docking_node,
         task_a_node,
