@@ -221,6 +221,7 @@
 #             diff += 2 * math.pi
 #         return diff
 
+
 import math
 import rclpy
 from rclpy.node import Node
@@ -243,24 +244,29 @@ class DockingBase(Node):
         self.current_yaw = 0.0
 
         # State machine:
-        # idle -> aligning -> visual_servo -> odom_drive -> docked
+        # idle -> fix_lateral -> fix_yaw -> visual_servo -> odom_drive -> docked
         self.state = 'idle'
 
         # Tuning
         self.stop_dist = 0.10
-        self.y_threshold = 0.03       # 3cm lateral tolerance
-        self.heading_threshold = 0.05  # ~3° heading tolerance
-        self.x_threshold = 0.04       # 4cm lateral tolerance during visual servo
+        self.lateral_threshold = 0.05  
+        self.yaw_threshold = 0.05      
+        self.x_threshold = 0.04        
         self.lin_speed = 0.04
         self.ang_speed = 0.3
-        self.ang_kp = 2.0
 
         # Marker state
         self.last_marker_z = 0.0
         self.last_marker_x = 0.0
         self.last_marker_rvec_y = 0.0
+        self.last_marker_rvec_z = 0.0
         self.last_marker_time = None
         self.marker_timeout = 0.3
+        self.marker_lost_timeout = 2.0
+
+        # --- Blind Alignment Snapshot Targets ---
+        self.target_yaw_step1 = None
+        self.target_yaw_step2 = None
 
         # Odom drive
         self.drive_distance = 0.0
@@ -295,11 +301,10 @@ class DockingBase(Node):
             self._logged_waiting = False
             self.aligned_count = 0
             self.last_marker_time = None
-            self.last_marker_z = 0.0
-            self.last_marker_x = 0.0
-            self.last_marker_rvec_y = 0.0
-            self.state = 'aligning'
-            self.get_logger().info('Activated — Phase 0: aligning (rotate only)...')
+            self.target_yaw_step1 = None
+            self.target_yaw_step2 = None
+            self.state = 'fix_lateral'
+            self.get_logger().info('Activated — Taking snapshots for blind alignment...')
         else:
             self.get_logger().info('Deactivated.')
             self.stop_robot()
@@ -325,7 +330,22 @@ class DockingBase(Node):
         self.last_marker_z = msg.pose.position.x
         self.last_marker_x = msg.pose.position.y
         self.last_marker_rvec_y = msg.pose.orientation.y
+        self.last_marker_rvec_z = msg.pose.orientation.z
         self.last_marker_time = self.get_clock().now().nanoseconds / 1e9
+
+        # Take the snapshots once during Step 1
+        if self.state == 'fix_lateral' and self.target_yaw_step1 is None:
+            # Angle needed to point the nose exactly at the marker
+            angle_to_marker = math.atan2(self.last_marker_x, self.last_marker_z)
+            self.target_yaw_step1 = self._normalize_angle(self.current_yaw + angle_to_marker)
+            
+            # Angle needed to be parallel/square with the dock face
+            self.target_yaw_step2 = self._normalize_angle(self.target_yaw_step1 + self.last_marker_rvec_y)
+            
+            self.get_logger().info(
+                f'Snapshots Locked! Target1: {math.degrees(self.target_yaw_step1):.1f}°, '
+                f'Target2: {math.degrees(self.target_yaw_step2):.1f}°'
+            )
 
     def drive_callback(self):
         if not self.is_active:
@@ -337,96 +357,85 @@ class DockingBase(Node):
             return
 
         now = self.get_clock().now().nanoseconds / 1e9
-        marker_age = (now - self.last_marker_time) if self.last_marker_time else 999
 
-        # ── PHASE 0: rotate in place until centred AND square ──
-        if self.state == 'aligning':
-            if marker_age > self.marker_timeout:
+        # ── STEP 1: Blind rotation to Nose-on ──
+        if self.state == 'fix_lateral':
+            if self.target_yaw_step1 is None:
                 self.cmd_pub.publish(Twist())
-                self.get_logger().warn('Aligning: waiting for marker...')
                 return
 
-            x = self.last_marker_x
-            rvec_y = self.last_marker_rvec_y
+            error = self._angle_diff(self.target_yaw_step1, self.current_yaw)
 
-            if abs(rvec_y) < self.heading_threshold and abs(x) < self.y_threshold:
+            if abs(error) < self.lateral_threshold:
                 self.cmd_pub.publish(Twist())
-                self.get_logger().info(
-                    f'Aligned! rvec_y={rvec_y:.3f}rad x={x:.3f}m — '
-                    f'starting approach...'
-                )
-                self.aligned_count = 0
+                self.get_logger().info('Step 1 Blind Alignment Complete.')
+                self.state = 'fix_yaw'
+                return
+
+            cmd = Twist()
+            cmd.angular.z = max(-self.ang_speed, min(self.ang_speed, 1.5 * error))
+            self.cmd_pub.publish(cmd)
+
+        # ── STEP 2: Blind rotation to Square-on ──
+        elif self.state == 'fix_yaw':
+            if self.target_yaw_step2 is None:
+                self.state = 'fix_lateral' # Fallback
+                return
+
+            error = self._angle_diff(self.target_yaw_step2, self.current_yaw)
+
+            if abs(error) < self.yaw_threshold:
+                self.cmd_pub.publish(Twist())
+                self.get_logger().info('Step 2 Blind Alignment Complete.')
                 self.state = 'visual_servo'
                 return
 
             cmd = Twist()
-            cmd.linear.x = 0.0
-            cmd.angular.z = max(-self.ang_speed,
-                                min(self.ang_speed,
-                                    2.0 * rvec_y + 1.5 * x))
+            cmd.angular.z = max(-self.ang_speed, min(self.ang_speed, 1.5 * error))
             self.cmd_pub.publish(cmd)
-            self.get_logger().info(
-                f'Aligning: rvec_y={rvec_y:.3f}rad '
-                f'({math.degrees(rvec_y):.1f}°) x={x:.3f}m'
-            )
 
-        # ── PHASE 1: visual servo — drive in while keeping centred ──
+        # ── STEP 3: Visual Servo (Live) ──
         elif self.state == 'visual_servo':
+            marker_age = (now - self.last_marker_time) if self.last_marker_time else 999
+
             if marker_age > self.marker_timeout:
                 if 0.0 < self.last_marker_z < 0.35:
-                    # Close enough — hand off to odom
                     self.drive_distance = max(0.0, self.last_marker_z - self.stop_dist)
-                    self.start_x = self.current_x
-                    self.start_y = self.current_y
+                    self.start_x, self.start_y = self.current_x, self.current_y
                     self.aligned_count = 0
                     self.state = 'odom_drive'
-                    self.get_logger().info(
-                        f'Marker lost at {self.last_marker_z:.3f}m — '
-                        f'odom driving {self.drive_distance:.3f}m'
-                    )
+                    self.get_logger().info(f'Marker lost at {self.last_marker_z:.3f}m — Finishing on Odom.')
                 else:
                     self.aligned_count = 0
                     self.cmd_pub.publish(Twist())
-                    self.get_logger().warn(
-                        'Visual servo: marker lost too far out — waiting...'
-                    )
                 return
 
-            z = self.last_marker_z
-            x = self.last_marker_x
+            z, x = self.last_marker_z, self.last_marker_x
 
             if z <= self.stop_dist:
                 self.cmd_pub.publish(Twist())
-                self.get_logger().info(f'Docked at {z:.3f}m via visual servo!')
+                self.get_logger().info(f'Docked at {z:.3f}m!')
                 self.state = 'docked'
                 self.on_docked()
                 return
 
             cmd = Twist()
-            cmd.angular.z = max(-self.ang_speed,
-                                min(self.ang_speed, self.ang_kp * x))
+            cmd.angular.z = max(-self.ang_speed, min(self.ang_speed, 2.0 * x))
 
             if abs(x) > self.x_threshold:
                 cmd.linear.x = 0.02
                 self.aligned_count = 0
             else:
                 self.aligned_count += 1
-                cmd.linear.x = min(self.lin_speed,
-                                   max(0.02, 0.3 * (z - self.stop_dist)))
-                self.get_logger().info(
-                    f'Aligned ({self.aligned_count}/{self.aligned_frames_needed}) '
-                    f'z={z:.3f}m x={x:.3f}m'
-                )
+                cmd.linear.x = min(self.lin_speed, max(0.02, 0.3 * (z - self.stop_dist)))
+                self.get_logger().info(f'Aligned ({self.aligned_count}/{self.aligned_frames_needed}) z={z:.3f}m')
 
             self.cmd_pub.publish(cmd)
 
-        # ── PHASE 2: odom straight drive for last bit ──
+        # ── STEP 4: Odom straight drive ──
         elif self.state == 'odom_drive':
-            dist_traveled = math.sqrt(
-                (self.current_x - self.start_x) ** 2 +
-                (self.current_y - self.start_y) ** 2
-            )
-            if dist_traveled >= self.drive_distance:
+            dist = math.sqrt((self.current_x - self.start_x)**2 + (self.current_y - self.start_y)**2)
+            if dist >= self.drive_distance:
                 self.cmd_pub.publish(Twist())
                 self.get_logger().info('Docked via odom!')
                 self.state = 'docked'
@@ -437,18 +446,22 @@ class DockingBase(Node):
                 self.cmd_pub.publish(cmd)
 
     def on_docked(self):
+        # Overridden by subclasses (Task_A_Main, Task_B_Main).
         pass
 
     def stop_robot(self):
         self.state = 'idle'
         self.aligned_count = 0
         self.last_marker_time = None
+        self.target_yaw_step1 = None
+        self.target_yaw_step2 = None
         self.cmd_pub.publish(Twist())
 
-    def _angle_diff(self, current, start):
-        diff = current - start
-        while diff > math.pi:
-            diff -= 2 * math.pi
-        while diff < -math.pi:
-            diff += 2 * math.pi
-        return diff
+    def _normalize_angle(self, angle):
+        while angle > math.pi: angle -= 2 * math.pi
+        while angle < -math.pi: angle += 2 * math.pi
+        return angle
+
+    def _angle_diff(self, target, current):
+        diff = target - current
+        return self._normalize_angle(diff)

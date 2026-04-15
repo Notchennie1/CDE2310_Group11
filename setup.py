@@ -12,10 +12,10 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch', [
-            'launch/aruco_launch.py',
-            'launch/laptop_launch.py',
             'launch/laptop_launch_no_nav.py',
             'launch/rpi_launch.py',
+            'launch/laptop.launch.py',
+            'launch/rpi.launch.py',
         ]),
         (os.path.join('lib', 'python3.10', 'site-packages', 'aruco_detection'),
             ['aruco_detection/camera_calibration.npz']),
