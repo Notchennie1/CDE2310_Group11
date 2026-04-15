@@ -43,6 +43,7 @@ class DockingNode(Node):
         self.last_marker_x = 0.0
         self.last_marker_bearing = 0.0
         self.last_marker_time = None
+        self.last_bearing_time = None
 
         # Pose snapshot at first sighting — used for the one-shot plan
         self.snap_x = 0.0
@@ -78,6 +79,7 @@ class DockingNode(Node):
     def bearing_callback(self, msg):
         if self.is_active:
             self.last_marker_bearing = msg.data
+            self.last_bearing_time = self.get_clock().now().nanoseconds / 1e9
 
     def active_cb(self, msg):
         was_active = self.is_active
@@ -126,8 +128,10 @@ class DockingNode(Node):
         self.last_marker_x = msg.pose.position.y
         self.last_marker_time = self.get_clock().now().nanoseconds / 1e9
 
-        # Plan once on first sighting — this is the whole point of the simpler flow.
-        if not self.plan_valid and self.last_marker_z > 0.0:
+        # Plan once on first sighting — but only if bearing has arrived too,
+        # otherwise we'd plan with bearing=0 and the "normal line" would line
+        # up with the robot's heading (→ a straight-line approach).
+        if not self.plan_valid and self.last_marker_z > 0.0 and self.last_bearing_time is not None:
             self.snap_x = self.current_x
             self.snap_y = self.current_y
             self.snap_yaw = self.current_yaw
@@ -135,8 +139,13 @@ class DockingNode(Node):
             self.plan_valid = True
             self.state = 'go_to_normal'
             self.get_logger().info(
-                f'Plan: drive to ({self.target_x:.2f},{self.target_y:.2f}), '
-                f'then face yaw={math.degrees(self.final_yaw):.0f}° and advance {self.final_dist:.2f}m'
+                f'Plan: marker(z={self.last_marker_z:.2f}, x={self.last_marker_x:.2f}, '
+                f'bearing={self.last_marker_bearing:.1f}°) '
+                f'→ waypoint=({self.target_x:.2f},{self.target_y:.2f}) '
+                f'from robot=({self.snap_x:.2f},{self.snap_y:.2f}, '
+                f'yaw={math.degrees(self.snap_yaw):.0f}°), '
+                f'final_yaw={math.degrees(self.final_yaw):.0f}°, '
+                f'final_dist={self.final_dist:.2f}m'
             )
 
     def drive_callback(self):
@@ -176,7 +185,10 @@ class DockingNode(Node):
 
             if dist < self.reach_tolerance:
                 self.state = 'search'
-                self.get_logger().info('Reached normal line — turning to find marker')
+                self.get_logger().info(
+                    f'Reached normal line (dist={dist:.3f}m) — turning toward marker '
+                    f'(yaw_err={math.degrees(self._norm(self.final_yaw - self.current_yaw)):.0f}°)'
+                )
                 return
 
             target_yaw = math.atan2(dy, dx)
