@@ -40,8 +40,40 @@ def generate_launch_description():
         output='screen'
     )
 
+    mission_manager = Node(
+        package='aruco_detection',
+        executable='mission_manager',
+        name='mission_manager',
+        output='screen'
+    )
+
+    docking_node = Node(
+        package='aruco_detection',
+        executable='docking_node',
+        name='docking_node',
+        output='screen'
+    )
+
+    task_a_node = Node(
+        package='aruco_detection',
+        executable='task_a_node',
+        name='task_a_node',
+        output='screen'
+    )
+
+    task_b_node = Node(
+        package='aruco_detection',
+        executable='task_b_node',
+        name='task_b_node',
+        output='screen'
+    )
+
     return LaunchDescription([
         cartographer,
         nav2,
         explorer,
+        mission_manager,
+        docking_node,
+        task_a_node,
+        task_b_node,
     ])

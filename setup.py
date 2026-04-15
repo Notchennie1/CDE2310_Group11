@@ -33,6 +33,7 @@ setup(
         'console_scripts': [
             'camera_node = aruco_detection.aruco_detection:main',
             'pnp_node = aruco_detection.aruco_detection_PNP:main',
+            'docking_node = aruco_detection.docking_base:main',
             'task_a_node = aruco_detection.Task_A_Main:main',
             'task_b_node = aruco_detection.Task_B_Main:main',
             'mission_manager = aruco_detection.docking_main:main',
