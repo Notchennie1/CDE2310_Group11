@@ -219,25 +219,7 @@ class MissionManager(Node):
             self.reset_to_explore()
             return
 
-        try:
-            t = self.tf_buffer.lookup_transform('map', 'base_link', rclpy.time.Time())
-            robot_x = t.transform.translation.x
-            robot_y = t.transform.translation.y
-            dist_to_target = math.sqrt(
-                (robot_x - self.target_x_map) ** 2 +
-                (robot_y - self.target_y_map) ** 2
-            )
-            self.get_logger().info(f'Distance to target after approach: {dist_to_target:.2f}m')
-
-            if dist_to_target > 0.5:
-                self.get_logger().warn(f'Nav2 succeeded but robot is {dist_to_target:.2f}m away — retrying')
-                self.start_approach(self.target_x_map, self.target_y_map)
-                return
-
-        except Exception as e:
-            self.get_logger().warn(f'Could not verify position after approach: {e}')
-
-        self.get_logger().info('Approach complete. Starting docking...')
+        self.get_logger().info('Nav2 approach complete. Starting docking...')
         self.state = 'DOCKING'
         self.docking_start_time = self.get_clock().now().nanoseconds / 1e9
         self.dock_pub.publish(Bool(data=True))
