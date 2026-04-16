@@ -9,7 +9,9 @@ class Task_B_Controller(Node):
         super().__init__('task_b_node')
 
         self.shots_fired = 0
+        self.total_shots = 3
         self.tracking = False
+        self.waiting_for_clear = False  # True after a shot, until marker disappears
 
         self.fire_pub = self.create_publisher(Bool, '/fire', 10)
         self.status_pub = self.create_publisher(String, 'task_status', 10)
@@ -23,7 +25,8 @@ class Task_B_Controller(Node):
         if msg.data:
             self.tracking = True
             self.shots_fired = 0
-            self.get_logger().info('Activated — waiting for pendulum marker (ID 3)')
+            self.waiting_for_clear = False
+            self.get_logger().info(f'Activated — will fire {self.total_shots} times on pendulum marker (ID 3)')
         else:
             self.tracking = False
 
@@ -36,22 +39,30 @@ class Task_B_Controller(Node):
         except ValueError:
             return
 
-        if marker_id != 3:
-            return
         if not self.tracking:
             return
-        if self.shots_fired >= 1:
+
+        # Marker 3 not visible — clear the gate so next sighting triggers a shot
+        if marker_id != 3:
+            if self.waiting_for_clear:
+                self.waiting_for_clear = False
+            return
+
+        # Marker 3 visible but we already fired on this appearance
+        if self.waiting_for_clear:
             return
 
         self.shots_fired += 1
-        self.get_logger().info(f'FIRE — marker 3 seen')
+        self.get_logger().info(f'FIRE {self.shots_fired}/{self.total_shots} — marker 3 seen')
         self.fire_pub.publish(Bool(data=True))
+        self.waiting_for_clear = True
 
-        self.get_logger().info('Shot fired. Reporting SUCCESS.')
-        self.tracking = False
-        msg_out = String()
-        msg_out.data = 'SUCCESS'
-        self.status_pub.publish(msg_out)
+        if self.shots_fired >= self.total_shots:
+            self.get_logger().info('All shots fired. Reporting SUCCESS.')
+            self.tracking = False
+            msg_out = String()
+            msg_out.data = 'SUCCESS'
+            self.status_pub.publish(msg_out)
 
 
 def main(args=None):
