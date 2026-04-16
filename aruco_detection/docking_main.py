@@ -194,16 +194,17 @@ class MissionManager(Node):
         goal_handle.get_result_async().add_done_callback(self.nav_finished_cb)
 
     def nav_finished_cb(self, future):
-        self.approach_in_progress = False
-        self._goal_handle = None
         result = future.result()
         status = result.status
 
-        # 4 = SUCCEEDED, 5 = CANCELED, 6 = CANCELED
-        if status in (5, 6):
-            # Goal was cancelled (e.g. by re-routing) — not a real failure.
-            self.get_logger().info(f'Approach goal cancelled (status {status}), awaiting re-route')
+        # 5 = CANCELED (e.g. by re-routing) — a new goal is already running,
+        # so don't touch approach_in_progress or _goal_handle.
+        if status == 5:
+            self.get_logger().info('Approach goal cancelled — re-route in progress')
             return
+
+        self.approach_in_progress = False
+        self._goal_handle = None
 
         if status != 4:
             self.get_logger().warn(f'Approach failed (status {status}), resetting...')
