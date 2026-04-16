@@ -149,15 +149,15 @@ class MissionManager(Node):
             self.get_logger().info(f'Robot: ({robot_x:.2f}, {robot_y:.2f})')
             self.get_logger().info(f'Target: ({target_x:.2f}, {target_y:.2f}), dist: {dist:.2f}m')
 
-            if dist < 0.4:
+            if dist < 0.3:
                 self.get_logger().warn('Already close enough, skipping approach nav — starting docking')
                 self.state = 'DOCKING'
                 self.docking_start_time = self.get_clock().now().nanoseconds / 1e9
                 self.dock_pub.publish(Bool(data=True))
                 return
 
-            goal_x = target_x + (0.4 * dx / dist)
-            goal_y = target_y + (0.4 * dy / dist)
+            goal_x = target_x + (0.3 * dx / dist)
+            goal_y = target_y + (0.3 * dy / dist)
             angle = math.atan2(target_y - goal_y, target_x - goal_x)
 
             self.get_logger().info(
@@ -199,7 +199,13 @@ class MissionManager(Node):
         result = future.result()
         status = result.status
 
-        if status != 4:  # 4 = STATUS_SUCCEEDED
+        # 4 = SUCCEEDED, 5 = CANCELED, 6 = CANCELED
+        if status in (5, 6):
+            # Goal was cancelled (e.g. by re-routing) — not a real failure.
+            self.get_logger().info(f'Approach goal cancelled (status {status}), awaiting re-route')
+            return
+
+        if status != 4:
             self.get_logger().warn(f'Approach failed (status {status}), resetting...')
             self.reset_to_explore()
             return
@@ -214,7 +220,7 @@ class MissionManager(Node):
             )
             self.get_logger().info(f'Distance to target after approach: {dist_to_target:.2f}m')
 
-            if dist_to_target > 1.0:
+            if dist_to_target > 0.5:
                 self.get_logger().warn(f'Nav2 succeeded but robot is {dist_to_target:.2f}m away — retrying')
                 self.start_approach(self.target_x_map, self.target_y_map)
                 return
