@@ -89,6 +89,10 @@ class MissionManager(Node):
         if self.state == 'DOCKING' or self.state == 'TASKING':
             return
 
+        # During approach, only process the marker we locked onto
+        if self.detected_marker_id is not None and marker_id != self.detected_marker_id:
+            return
+
         try:
             t = self.tf_buffer.lookup_transform(
                 'map',
@@ -203,6 +207,10 @@ class MissionManager(Node):
             self.get_logger().info('Approach goal cancelled — re-route in progress')
             return
 
+        # State already moved on (e.g. reset_to_explore was called) — ignore.
+        if self.state != 'APPROACHING':
+            return
+
         self.approach_in_progress = False
         self._goal_handle = None
 
@@ -266,6 +274,8 @@ class MissionManager(Node):
             self.reset_to_explore()
 
     def reset_to_explore(self):
+        if self._goal_handle is not None:
+            self._goal_handle.cancel_goal_async()
         self.state = 'SEARCHING'
         self.target_x_map = None
         self.target_y_map = None
