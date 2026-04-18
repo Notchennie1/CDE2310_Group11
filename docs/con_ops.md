@@ -52,6 +52,8 @@ By prioritizing Path Alignment (64.0) and locking our speed at a steady 0.10m/s,
 
 <img width="2288" height="405" alt="image" src="https://github.com/user-attachments/assets/fc89219e-86c6-41a1-bf85-c246776fdd2b" />
 
+
+
 **Phase III : Aruco Tracking**
 Phase III represents the Scientific Objective State of the mission. Once the Phase II transit is successfully concluded and the platform has arrived at a high-value waypoint (Frontier), the system transitions from a movement-centric mode to a data-collection mode. The primary goal of Phase III is the systematic visual sweep of the environment to identify and log ArUco markers.
 
