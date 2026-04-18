@@ -1,0 +1,121 @@
+[0.000000] (-) TimerEvent: {}
+[0.001637] (aruco_detection) JobQueued: {'identifier': 'aruco_detection', 'dependencies': OrderedDict()}
+[0.001770] (aruco_detection) JobStarted: {'identifier': 'aruco_detection'}
+[0.099009] (-) TimerEvent: {}
+[0.199665] (-) TimerEvent: {}
+[0.300355] (-) TimerEvent: {}
+[0.401024] (-) TimerEvent: {}
+[0.501684] (-) TimerEvent: {}
+[0.602353] (-) TimerEvent: {}
+[0.702961] (-) TimerEvent: {}
+[0.803584] (-) TimerEvent: {}
+[0.904334] (-) TimerEvent: {}
+[1.005514] (-) TimerEvent: {}
+[1.106164] (-) TimerEvent: {}
+[1.206803] (-) TimerEvent: {}
+[1.307613] (-) TimerEvent: {}
+[1.408514] (-) TimerEvent: {}
+[1.509164] (-) TimerEvent: {}
+[1.609856] (-) TimerEvent: {}
+[1.710562] (-) TimerEvent: {}
+[1.811178] (-) TimerEvent: {}
+[1.911823] (-) TimerEvent: {}
+[2.012432] (-) TimerEvent: {}
+[2.113084] (-) TimerEvent: {}
+[2.213694] (-) TimerEvent: {}
+[2.314299] (-) TimerEvent: {}
+[2.414928] (-) TimerEvent: {}
+[2.515620] (-) TimerEvent: {}
+[2.616534] (-) TimerEvent: {}
+[2.717245] (-) TimerEvent: {}
+[2.817890] (-) TimerEvent: {}
+[2.918588] (-) TimerEvent: {}
+[3.019481] (-) TimerEvent: {}
+[3.040865] (aruco_detection) Command: {'cmd': ['/usr/bin/python3', '-W', 'ignore:setup.py install is deprecated', '-W', 'ignore:easy_install command is deprecated', 'setup.py', 'egg_info', '--egg-base', 'build/aruco_detection', 'build', '--build-base', '/home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build', 'install', '--record', '/home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/install.log', '--single-version-externally-managed', 'install_data'], 'cwd': '/home/ubuntu/turtlebot3_ws/src/detection_final', 'env': {'LESSOPEN': '| /usr/bin/lesspipe %s', 'USER': 'ubuntu', 'SSH_CLIENT': '172.20.10.6 35522 22', 'LC_TIME': 'id_ID.UTF-8', 'XDG_SESSION_TYPE': 'tty', 'GIT_ASKPASS': '/home/ubuntu/.vscode-server/cli/servers/Stable-41dd792b5e652393e7787322889ed5fdc58bd75b/server/extensions/git/dist/askpass.sh', 'SHLVL': '2', 'LD_LIBRARY_PATH': '/home/ubuntu/turtlebot3_ws/install/explore_lite_msgs/lib:/home/ubuntu/turtlebot3_ws/install/coin_d4_driver/lib:/home/ubuntu/install/explore_lite_msgs/lib:/opt/ros/humble/lib/aarch64-linux-gnu:/opt/ros/humble/lib', 'BROWSER': '/home/ubuntu/.vscode-server/cli/servers/Stable-41dd792b5e652393e7787322889ed5fdc58bd75b/server/bin/helpers/browser.sh', 'MOTD_SHOWN': 'pam', 'HOME': '/home/ubuntu', 'TERM_PROGRAM_VERSION': '1.115.0', 'VSCODE_IPC_HOOK_CLI': '/run/user/1000/vscode-ipc-ee3aa538-e48e-48e6-a652-e714a15e2b04.sock', 'ROS_PYTHON_VERSION': '3', 'VSCODE_GIT_ASKPASS_MAIN': '/home/ubuntu/.vscode-server/cli/servers/Stable-41dd792b5e652393e7787322889ed5fdc58bd75b/server/extensions/git/dist/askpass-main.js', 'LC_MONETARY': 'id_ID.UTF-8', 'VSCODE_GIT_ASKPASS_NODE': '/home/ubuntu/.vscode-server/cli/servers/Stable-41dd792b5e652393e7787322889ed5fdc58bd75b/server/node', 'VSCODE_PYTHON_AUTOACTIVATE_GUARD': '1', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus', 'COLORTERM': 'truecolor', 'COLCON_PREFIX_PATH': '/home/ubuntu/turtlebot3_ws/install:/home/ubuntu/install', 'ROS_DISTRO': 'humble', 'LOGNAME': 'ubuntu', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'XDG_SESSION_CLASS': 'user', 'TERM': 'xterm-256color', 'XDG_SESSION_ID': '4', 'ROS_LOCALHOST_ONLY': '0', 'PATH': '/home/ubuntu/.local/bin:/home/ubuntu/.vscode-server/data/User/globalStorage/github.copilot-chat/debugCommand:/home/ubuntu/.vscode-server/data/User/globalStorage/github.copilot-chat/copilotCli:/home/ubuntu/.vscode-server/cli/servers/Stable-41dd792b5e652393e7787322889ed5fdc58bd75b/server/bin/remote-cli:/home/ubuntu/.local/bin:/home/ubuntu/.local/bin:/opt/ros/humble/bin:/home/ubuntu/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin', 'LC_ADDRESS': 'id_ID.UTF-8', 'XDG_RUNTIME_DIR': '/run/user/1000', 'LANG': 'en_US.UTF-8', 'LC_TELEPHONE': 'id_ID.UTF-8', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:', 'VSCODE_GIT_IPC_HANDLE': '/run/user/1000/vscode-git-79dcdd0126.sock', 'TERM_PROGRAM': 'vscode', 'ROS_DOMAIN_ID': '40', 'AMENT_PREFIX_PATH': '/home/ubuntu/turtlebot3_ws/install/turtlebot3:/home/ubuntu/turtlebot3_ws/install/turtlebot3_teleop:/home/ubuntu/turtlebot3_ws/install/turtlebot3_bringup:/home/ubuntu/turtlebot3_ws/install/turtlebot3_node:/home/ubuntu/turtlebot3_ws/install/turtlebot3_example:/home/ubuntu/turtlebot3_ws/install/turtlebot3_description:/home/ubuntu/turtlebot3_ws/install/py_pubsub:/home/ubuntu/turtlebot3_ws/install/ld08_driver:/home/ubuntu/turtlebot3_ws/install/explore_lite_msgs:/home/ubuntu/turtlebot3_ws/install/coin_d4_driver:/home/ubuntu/turtlebot3_ws/install/aruco_detection:/home/ubuntu/install/turtlebot3_teleop:/home/ubuntu/install/turtlebot3_example:/home/ubuntu/install/turtlebot3_description:/home/ubuntu/install/explore_lite_msgs:/opt/ros/humble', 'SHELL': '/bin/bash', 'LC_NAME': 'id_ID.UTF-8', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'LC_MEASUREMENT': 'id_ID.UTF-8', 'LC_IDENTIFICATION': 'id_ID.UTF-8', 'VSCODE_GIT_ASKPASS_EXTRA_ARGS': '', 'PWD': '/home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection', 'TURTLEBOT3_MODEL': 'burger', 'LC_ALL': 'en_US.UTF-8', 'SSH_CONNECTION': '172.20.10.6 35522 172.20.10.2 22', 'XDG_DATA_DIRS': '/usr/local/share:/usr/share:/var/lib/snapd/desktop', 'LDS_MODEL': 'LDS-02', 'PYTHONPATH': '/home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages:/home/ubuntu/turtlebot3_ws/build/turtlebot3_teleop:/home/ubuntu/turtlebot3_ws/install/turtlebot3_teleop/lib/python3.10/site-packages:/home/ubuntu/turtlebot3_ws/build/turtlebot3_example:/home/ubuntu/turtlebot3_ws/install/turtlebot3_example/lib/python3.10/site-packages:/home/ubuntu/turtlebot3_ws/install/py_pubsub/lib/python3.10/site-packages:/home/ubuntu/turtlebot3_ws/install/explore_lite_msgs/local/lib/python3.10/dist-packages:/home/ubuntu/turtlebot3_ws/install/aruco_detection/lib/python3.10/site-packages:/home/ubuntu/install/turtlebot3_teleop/lib/python3.10/site-packages:/home/ubuntu/install/turtlebot3_example/lib/python3.10/site-packages:/home/ubuntu/install/explore_lite_msgs/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages', 'LC_NUMERIC': 'id_ID.UTF-8', 'LC_PAPER': 'id_ID.UTF-8', 'COLCON': '1', 'CMAKE_PREFIX_PATH': '/home/ubuntu/turtlebot3_ws/install/turtlebot3:/home/ubuntu/turtlebot3_ws/install/turtlebot3_bringup:/home/ubuntu/turtlebot3_ws/install/turtlebot3_node:/home/ubuntu/turtlebot3_ws/install/turtlebot3_description:/home/ubuntu/turtlebot3_ws/install/ld08_driver:/home/ubuntu/turtlebot3_ws/install/explore_lite_msgs:/home/ubuntu/turtlebot3_ws/install/coin_d4_driver:/home/ubuntu/install/turtlebot3_description:/home/ubuntu/install/explore_lite_msgs'}, 'shell': False}
+[3.119671] (-) TimerEvent: {}
+[3.220502] (-) TimerEvent: {}
+[3.321359] (-) TimerEvent: {}
+[3.422119] (-) TimerEvent: {}
+[3.522791] (-) TimerEvent: {}
+[3.623432] (-) TimerEvent: {}
+[3.724085] (-) TimerEvent: {}
+[3.824759] (-) TimerEvent: {}
+[3.925385] (-) TimerEvent: {}
+[4.026087] (-) TimerEvent: {}
+[4.126746] (-) TimerEvent: {}
+[4.143283] (aruco_detection) StdoutLine: {'line': b'running egg_info\n'}
+[4.145605] (aruco_detection) StdoutLine: {'line': b'creating build/aruco_detection/aruco_detection.egg-info\n'}
+[4.146812] (aruco_detection) StdoutLine: {'line': b'writing build/aruco_detection/aruco_detection.egg-info/PKG-INFO\n'}
+[4.147853] (aruco_detection) StdoutLine: {'line': b'writing dependency_links to build/aruco_detection/aruco_detection.egg-info/dependency_links.txt\n'}
+[4.148704] (aruco_detection) StdoutLine: {'line': b'writing entry points to build/aruco_detection/aruco_detection.egg-info/entry_points.txt\n'}
+[4.149383] (aruco_detection) StdoutLine: {'line': b'writing requirements to build/aruco_detection/aruco_detection.egg-info/requires.txt\n'}
+[4.150075] (aruco_detection) StdoutLine: {'line': b'writing top-level names to build/aruco_detection/aruco_detection.egg-info/top_level.txt\n'}
+[4.151041] (aruco_detection) StdoutLine: {'line': b"writing manifest file 'build/aruco_detection/aruco_detection.egg-info/SOURCES.txt'\n"}
+[4.158340] (aruco_detection) StdoutLine: {'line': b"reading manifest file 'build/aruco_detection/aruco_detection.egg-info/SOURCES.txt'\n"}
+[4.161999] (aruco_detection) StdoutLine: {'line': b"writing manifest file 'build/aruco_detection/aruco_detection.egg-info/SOURCES.txt'\n"}
+[4.162759] (aruco_detection) StdoutLine: {'line': b'running build\n'}
+[4.163226] (aruco_detection) StdoutLine: {'line': b'running build_py\n'}
+[4.163928] (aruco_detection) StdoutLine: {'line': b'creating /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build\n'}
+[4.164687] (aruco_detection) StdoutLine: {'line': b'creating /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib\n'}
+[4.165569] (aruco_detection) StdoutLine: {'line': b'creating /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib/aruco_detection\n'}
+[4.166133] (aruco_detection) StdoutLine: {'line': b'copying aruco_detection/__init__.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib/aruco_detection\n'}
+[4.166470] (aruco_detection) StdoutLine: {'line': b'copying aruco_detection/Task_B_Main.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib/aruco_detection\n'}
+[4.167649] (aruco_detection) StdoutLine: {'line': b'copying aruco_detection/aruco_detection_PNP.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib/aruco_detection\n'}
+[4.169334] (aruco_detection) StdoutLine: {'line': b'copying aruco_detection/aruco_detection.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib/aruco_detection\n'}
+[4.171071] (aruco_detection) StdoutLine: {'line': b'copying aruco_detection/servo.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib/aruco_detection\n'}
+[4.171969] (aruco_detection) StdoutLine: {'line': b'copying aruco_detection/test.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib/aruco_detection\n'}
+[4.173444] (aruco_detection) StdoutLine: {'line': b'copying aruco_detection/docking_base.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib/aruco_detection\n'}
+[4.175495] (aruco_detection) StdoutLine: {'line': b'copying aruco_detection/servo_node.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib/aruco_detection\n'}
+[4.176350] (aruco_detection) StdoutLine: {'line': b'copying aruco_detection/Task_A_Main.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib/aruco_detection\n'}
+[4.177312] (aruco_detection) StdoutLine: {'line': b'copying aruco_detection/docking_main.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib/aruco_detection\n'}
+[4.180082] (aruco_detection) StdoutLine: {'line': b'running install\n'}
+[4.181556] (aruco_detection) StdoutLine: {'line': b'running install_lib\n'}
+[4.185074] (aruco_detection) StdoutLine: {'line': b'creating /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection\n'}
+[4.185730] (aruco_detection) StdoutLine: {'line': b'copying /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib/aruco_detection/__init__.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection\n'}
+[4.186526] (aruco_detection) StdoutLine: {'line': b'copying /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib/aruco_detection/Task_B_Main.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection\n'}
+[4.187439] (aruco_detection) StdoutLine: {'line': b'copying /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib/aruco_detection/aruco_detection_PNP.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection\n'}
+[4.188446] (aruco_detection) StdoutLine: {'line': b'copying /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib/aruco_detection/aruco_detection.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection\n'}
+[4.189257] (aruco_detection) StdoutLine: {'line': b'copying /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib/aruco_detection/servo.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection\n'}
+[4.190187] (aruco_detection) StdoutLine: {'line': b'copying /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib/aruco_detection/test.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection\n'}
+[4.190994] (aruco_detection) StdoutLine: {'line': b'copying /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib/aruco_detection/docking_base.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection\n'}
+[4.192136] (aruco_detection) StdoutLine: {'line': b'copying /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib/aruco_detection/servo_node.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection\n'}
+[4.193071] (aruco_detection) StdoutLine: {'line': b'copying /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib/aruco_detection/Task_A_Main.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection\n'}
+[4.193878] (aruco_detection) StdoutLine: {'line': b'copying /home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/build/lib/aruco_detection/docking_main.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection\n'}
+[4.197494] (aruco_detection) StdoutLine: {'line': b'byte-compiling /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection/__init__.py to __init__.cpython-310.pyc\n'}
+[4.199022] (aruco_detection) StdoutLine: {'line': b'byte-compiling /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection/Task_B_Main.py to Task_B_Main.cpython-310.pyc\n'}
+[4.202623] (aruco_detection) StdoutLine: {'line': b'byte-compiling /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection/aruco_detection_PNP.py to aruco_detection_PNP.cpython-310.pyc\n'}
+[4.205581] (aruco_detection) StdoutLine: {'line': b'byte-compiling /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection/aruco_detection.py to aruco_detection.cpython-310.pyc\n'}
+[4.208263] (aruco_detection) StdoutLine: {'line': b'byte-compiling /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection/servo.py to servo.cpython-310.pyc\n'}
+[4.210214] (aruco_detection) StdoutLine: {'line': b'byte-compiling /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection/test.py to test.cpython-310.pyc\n'}
+[4.211484] (aruco_detection) StdoutLine: {'line': b'byte-compiling /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection/docking_base.py to docking_base.cpython-310.pyc\n'}
+[4.217059] (aruco_detection) StdoutLine: {'line': b'byte-compiling /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection/servo_node.py to servo_node.cpython-310.pyc\n'}
+[4.219066] (aruco_detection) StdoutLine: {'line': b'byte-compiling /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection/Task_A_Main.py to Task_A_Main.cpython-310.pyc\n'}
+[4.221652] (aruco_detection) StdoutLine: {'line': b'byte-compiling /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection/docking_main.py to docking_main.cpython-310.pyc\n'}
+[4.226940] (-) TimerEvent: {}
+[4.227832] (aruco_detection) StdoutLine: {'line': b'running install_data\n'}
+[4.228502] (aruco_detection) StdoutLine: {'line': b'creating /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/share/ament_index\n'}
+[4.229201] (aruco_detection) StdoutLine: {'line': b'creating /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/share/ament_index/resource_index\n'}
+[4.229749] (aruco_detection) StdoutLine: {'line': b'creating /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/share/ament_index/resource_index/packages\n'}
+[4.230433] (aruco_detection) StdoutLine: {'line': b'copying resource/aruco_detection -> /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/share/ament_index/resource_index/packages\n'}
+[4.230825] (aruco_detection) StdoutLine: {'line': b'copying package.xml -> /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/share/aruco_detection\n'}
+[4.231294] (aruco_detection) StdoutLine: {'line': b'creating /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/share/aruco_detection/launch\n'}
+[4.231760] (aruco_detection) StdoutLine: {'line': b'copying launch/aruco_launch.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/share/aruco_detection/launch\n'}
+[4.232984] (aruco_detection) StdoutLine: {'line': b'copying launch/laptop_launch.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/share/aruco_detection/launch\n'}
+[4.234539] (aruco_detection) StdoutLine: {'line': b'copying launch/laptop_launch_no_nav.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/share/aruco_detection/launch\n'}
+[4.235959] (aruco_detection) StdoutLine: {'line': b'copying launch/rpi_launch.py -> /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/share/aruco_detection/launch\n'}
+[4.237332] (aruco_detection) StdoutLine: {'line': b'copying aruco_detection/camera_calibration.npz -> /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection\n'}
+[4.237897] (aruco_detection) StdoutLine: {'line': b'running install_egg_info\n'}
+[4.244935] (aruco_detection) StdoutLine: {'line': b'Copying build/aruco_detection/aruco_detection.egg-info to /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/python3.10/site-packages/aruco_detection-0.0.0-py3.10.egg-info\n'}
+[4.251052] (aruco_detection) StdoutLine: {'line': b'running install_scripts\n'}
+[4.327091] (-) TimerEvent: {}
+[4.340072] (aruco_detection) StdoutLine: {'line': b'Installing camera_node script to /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/aruco_detection\n'}
+[4.341072] (aruco_detection) StdoutLine: {'line': b'Installing mission_manager script to /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/aruco_detection\n'}
+[4.341859] (aruco_detection) StdoutLine: {'line': b'Installing pnp_node script to /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/aruco_detection\n'}
+[4.342540] (aruco_detection) StdoutLine: {'line': b'Installing servo_node script to /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/aruco_detection\n'}
+[4.343178] (aruco_detection) StdoutLine: {'line': b'Installing task_a_node script to /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/aruco_detection\n'}
+[4.343924] (aruco_detection) StdoutLine: {'line': b'Installing task_b_node script to /home/ubuntu/turtlebot3_ws/src/detection_final/install/aruco_detection/lib/aruco_detection\n'}
+[4.346029] (aruco_detection) StdoutLine: {'line': b"writing list of installed files to '/home/ubuntu/turtlebot3_ws/src/detection_final/build/aruco_detection/install.log'\n"}
+[4.427455] (-) TimerEvent: {}
+[4.464460] (aruco_detection) CommandEnded: {'returncode': 0}
+[4.511254] (aruco_detection) JobEnded: {'identifier': 'aruco_detection', 'rc': 0}
+[4.513899] (-) EventReactorShutdown: {}

@@ -1,0 +1,297 @@
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import Bool, String
+from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
+from nav2_msgs.action import NavigateToPose
+from rclpy.action import ActionClient
+from rclpy.qos import QoSProfile, DurabilityPolicy
+from explore_lite_msgs.msg import ExploreStatus
+import math
+from tf2_ros import Buffer, TransformListener
+from tf2_geometry_msgs import do_transform_pose
+
+
+class MissionManager(Node):
+    def __init__(self):
+        super().__init__('mission_manager')
+
+        # IDs 1 and 2 are valid docking targets; everything else is ignored
+        self.target_ids = {1, 2}
+        self.state = 'SEARCHING'
+        self.detected_marker_id = None
+
+        self.tf_buffer = Buffer(cache_time=rclpy.duration.Duration(seconds=5))
+        self.tf_listener = TransformListener(self.tf_buffer, self)
+
+        self.exp_active_pub   = self.create_publisher(Bool, 'explore/resume', 10)
+        self.dock_pub         = self.create_publisher(Bool, '/dock_active', 10)
+        self.task_a_pub       = self.create_publisher(Bool, '/task_a_active', 10)
+        self.task_b_pub       = self.create_publisher(Bool, '/task_b_active', 10)
+        self.initial_pose_pub = self.create_publisher(PoseWithCovarianceStamped, '/initialpose', 10)
+
+        self.create_subscription(PoseStamped, 'target_3d', self.aruco_callback, 10)
+        self.create_subscription(String, 'task_status', self.task_status_cb, 10)
+
+        status_qos = QoSProfile(
+            depth=1,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL
+        )
+        self.create_subscription(ExploreStatus, 'explore/status', self.explore_status_cb, status_qos)
+
+        self.nav_client = ActionClient(self, NavigateToPose, 'navigate_to_pose')
+
+        self.target_x_map = None
+        self.target_y_map = None
+        self._goal_handle = None
+        self.approach_in_progress = False
+
+        # Docking watchdog: if docking_base never reports back within this window,
+        # assume it's dead/stuck and reset to exploration.
+        self.docking_start_time = None
+        self.docking_timeout = 75.0
+        self.create_timer(1.0, self._docking_watchdog)
+
+        self.initial_pose_published = False
+        self.create_timer(1.0, self.publish_initial_pose_once)
+
+        self.get_logger().info('Mission Manager Initialized - SEARCHING')
+
+    def publish_initial_pose_once(self):
+        if self.initial_pose_published:
+            return
+        msg = PoseWithCovarianceStamped()
+        msg.header.frame_id = 'map'
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.pose.pose.orientation.w = 1.0
+        msg.pose.covariance[0] = 0.25
+        msg.pose.covariance[7] = 0.25
+        msg.pose.covariance[35] = 0.07
+        self.initial_pose_pub.publish(msg)
+        self.initial_pose_published = True
+        self.get_logger().info('Initial pose published')
+        self.exp_active_pub.publish(Bool(data=True))
+        self.get_logger().info('Exploration started')
+
+    def aruco_callback(self, msg):
+        # frame_id is "camera_link:<id>" — split the id off before TF lookup.
+        parts = msg.header.frame_id.split(':', 1)
+        if len(parts) != 2:
+            return
+        tf_frame = parts[0]
+        try:
+            marker_id = int(parts[1])
+        except ValueError:
+            return
+
+        if marker_id not in self.target_ids:
+            return
+
+        if self.state == 'DOCKING' or self.state == 'TASKING':
+            return
+
+        # During approach, only process the marker we locked onto
+        if self.detected_marker_id is not None and marker_id != self.detected_marker_id:
+            return
+
+        try:
+            t = self.tf_buffer.lookup_transform(
+                'map',
+                tf_frame,
+                rclpy.time.Time(),
+                timeout=rclpy.duration.Duration(seconds=0.1)
+            )
+
+            p_map = do_transform_pose(msg.pose, t)
+            new_x = p_map.position.x
+            new_y = p_map.position.y
+
+            if self.target_x_map is None:
+                self.get_logger().info(
+                    f'First detection! Marker ID {marker_id} at ({new_x:.2f}, {new_y:.2f}). Moving in...'
+                )
+                self.detected_marker_id = marker_id
+                self.target_x_map = new_x
+                self.target_y_map = new_y
+                self.exp_active_pub.publish(Bool(data=False))
+                self.state = 'APPROACHING'
+                self.start_approach(new_x, new_y)
+
+            else:
+                dist_change = math.sqrt(
+                    (new_x - self.target_x_map) ** 2 +
+                    (new_y - self.target_y_map) ** 2
+                )
+                if dist_change > 0.15:
+                    self.get_logger().info(f'Target updated ({dist_change:.2f}m shift) → re-routing')
+                    self.target_x_map = new_x
+                    self.target_y_map = new_y
+
+                    if self._goal_handle is not None:
+                        self._goal_handle.cancel_goal_async()
+                        self._goal_handle = None
+                    self.approach_in_progress = False
+                    self.start_approach(new_x, new_y)
+                elif not self.approach_in_progress:
+                    self.start_approach(self.target_x_map, self.target_y_map)
+
+        except Exception as e:
+            self.get_logger().warn(f'TF lookup failed: {e}')
+
+    def start_approach(self, target_x, target_y):
+        if self.approach_in_progress:
+            return
+
+        try:
+            t = self.tf_buffer.lookup_transform('map', 'base_link', rclpy.time.Time())
+            robot_x = t.transform.translation.x
+            robot_y = t.transform.translation.y
+
+            dx = robot_x - target_x
+            dy = robot_y - target_y
+            dist = math.sqrt(dx ** 2 + dy ** 2)
+
+            self.get_logger().info(f'Robot: ({robot_x:.2f}, {robot_y:.2f})')
+            self.get_logger().info(f'Target: ({target_x:.2f}, {target_y:.2f}), dist: {dist:.2f}m')
+
+            if dist < 0.3:
+                self.get_logger().warn('Already close enough, skipping approach nav — starting docking')
+                self.state = 'DOCKING'
+                self.docking_start_time = self.get_clock().now().nanoseconds / 1e9
+                self.dock_pub.publish(Bool(data=True))
+                return
+
+            goal_x = target_x + (0.3 * dx / dist)
+            goal_y = target_y + (0.3 * dy / dist)
+            angle = math.atan2(target_y - goal_y, target_x - goal_x)
+
+            self.get_logger().info(
+                f'Approach goal: ({goal_x:.2f}, {goal_y:.2f}), heading: {math.degrees(angle):.1f}°'
+            )
+
+            goal_msg = NavigateToPose.Goal()
+            goal_msg.pose.header.frame_id = 'map'
+            goal_msg.pose.header.stamp = self.get_clock().now().to_msg()
+            goal_msg.pose.pose.position.x = goal_x
+            goal_msg.pose.pose.position.y = goal_y
+            goal_msg.pose.pose.orientation.z = math.sin(angle / 2.0)
+            goal_msg.pose.pose.orientation.w = math.cos(angle / 2.0)
+
+            if not self.nav_client.server_is_ready():
+                self.get_logger().warn('navigate_to_pose server not ready, skipping approach')
+                return
+
+            self.approach_in_progress = True
+            self.nav_client.send_goal_async(goal_msg).add_done_callback(self.nav_response_cb)
+
+        except Exception as e:
+            self.get_logger().error(f'Approach setup failed: {e}')
+            self.reset_to_explore()
+
+    def nav_response_cb(self, future):
+        goal_handle = future.result()
+        if not goal_handle.accepted:
+            self.get_logger().error('Goal rejected — resetting to explore')
+            self.approach_in_progress = False
+            self.reset_to_explore()
+            return
+        self._goal_handle = goal_handle
+        goal_handle.get_result_async().add_done_callback(self.nav_finished_cb)
+
+    def nav_finished_cb(self, future):
+        result = future.result()
+        status = result.status
+
+        # 5 = CANCELED (e.g. by re-routing) — a new goal is already running,
+        # so don't touch approach_in_progress or _goal_handle.
+        if status == 5:
+            self.get_logger().info('Approach goal cancelled — re-route in progress')
+            return
+
+        # State already moved on (e.g. reset_to_explore was called) — ignore.
+        if self.state != 'APPROACHING':
+            return
+
+        self.approach_in_progress = False
+        self._goal_handle = None
+
+        if status != 4:
+            self.get_logger().warn(f'Approach failed (status {status}), resetting...')
+            self.reset_to_explore()
+            return
+
+        self.get_logger().info('Nav2 approach complete. Starting docking...')
+        self.state = 'DOCKING'
+        self.docking_start_time = self.get_clock().now().nanoseconds / 1e9
+        self.dock_pub.publish(Bool(data=True))
+
+    def explore_status_cb(self, msg):
+        if msg.status == ExploreStatus.EXPLORATION_COMPLETE and self.state == 'SEARCHING':
+            self.get_logger().info('Exploration complete — all frontiers exhausted. Mission done.')
+
+    def task_status_cb(self, msg):
+        if msg.data == 'DOCKED' and self.state == 'DOCKING':
+            self.dock_pub.publish(Bool(data=False))
+            self.docking_start_time = None
+            task_label = 'A' if self.detected_marker_id == 1 else 'B'
+            self.get_logger().info(f'Docking complete. Activating Task {task_label}...')
+            self.state = 'TASKING'
+            if self.detected_marker_id == 1:
+                self.task_a_pub.publish(Bool(data=True))
+            else:
+                self.task_b_pub.publish(Bool(data=True))
+
+        elif msg.data == 'DOCK_FAILED' and self.state == 'DOCKING':
+            self.get_logger().warn('docking_base reported DOCK_FAILED — resetting')
+            self.dock_pub.publish(Bool(data=False))
+            self.docking_start_time = None
+            self.reset_to_explore()
+
+        elif msg.data == 'SUCCESS' and self.state == 'TASKING':
+            task_label = 'A' if self.detected_marker_id == 1 else 'B'
+            self.get_logger().info(f'Task {task_label} complete. Resuming exploration...')
+            if self.detected_marker_id == 1:
+                self.task_a_pub.publish(Bool(data=False))
+            else:
+                self.task_b_pub.publish(Bool(data=False))
+            self.reset_to_explore()
+
+    def reset_to_explore(self):
+        if self._goal_handle is not None:
+            self._goal_handle.cancel_goal_async()
+        self.state = 'SEARCHING'
+        self.target_x_map = None
+        self.target_y_map = None
+        self.detected_marker_id = None
+        self._goal_handle = None
+        self.approach_in_progress = False
+        self.docking_start_time = None
+        self.exp_active_pub.publish(Bool(data=True))
+        self.get_logger().info('Back to SEARCHING')
+
+    def _docking_watchdog(self):
+        if self.state != 'DOCKING' or self.docking_start_time is None:
+            return
+        elapsed = self.get_clock().now().nanoseconds / 1e9 - self.docking_start_time
+        if elapsed > self.docking_timeout:
+            self.get_logger().warn(
+                f'Docking watchdog tripped after {elapsed:.1f}s — resetting'
+            )
+            self.dock_pub.publish(Bool(data=False))
+            self.reset_to_explore()
+
+
+def main():
+    rclpy.init()
+    node = MissionManager()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        node.get_logger().info('Manual Shutdown')
+    finally:
+        node.destroy_node()
+        if rclpy.ok():
+            rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()
