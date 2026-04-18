@@ -49,7 +49,6 @@ For this mission, we expect the narrowest gaps to be approximately 40cm. Since t
     Despite making the robot "braver" with the scaling, we picked a massive Base Obstacle Scale of 25.0. This is our safety insurance. It ensures that if the robot’s 8cm launcher extension even thinks about clipping a wall, the penalty becomes so high that the controller will instantly force a correction. We want the robot to be terrified of actual contact, but comfortable moving through tight spaces.
 
 By prioritizing Path Alignment (64.0) and locking our speed at a steady 0.10m/s, we effectively put the robot on "virtual rails." This prevents any side-to-side wobbling that would cause the lopsided 8cm tail to swing into a barrier. The slow speed ensures the LiDAR has zero "motion blur," and the computer has plenty of time to calculate the perfect, collision-free trajectory through the center of every 40cm corridor.
-
 <img width="2288" height="405" alt="image" src="https://github.com/user-attachments/assets/fc89219e-86c6-41a1-bf85-c246776fdd2b" />
 
 
