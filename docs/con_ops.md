@@ -51,3 +51,16 @@ For this mission, we expect the narrowest gaps to be approximately 40cm. Since t
 By prioritizing Path Alignment (64.0) and locking our speed at a steady 0.10m/s, we effectively put the robot on "virtual rails." This prevents any side-to-side wobbling that would cause the lopsided 8cm tail to swing into a barrier. The slow speed ensures the LiDAR has zero "motion blur," and the computer has plenty of time to calculate the perfect, collision-free trajectory through the center of every 40cm corridor.
 
 <img width="2288" height="405" alt="image" src="https://github.com/user-attachments/assets/fc89219e-86c6-41a1-bf85-c246776fdd2b" />
+
+**Phase III : Aruco Tracking**
+Phase III represents the Scientific Objective State of the mission. Once the Phase II transit is successfully concluded and the platform has arrived at a high-value waypoint (Frontier), the system transitions from a movement-centric mode to a data-collection mode. The primary goal of Phase III is the systematic visual sweep of the environment to identify and log ArUco markers.
+
+Upon arrival at the Phase II goal, the Nav2 action client returns a "Success" status, immediately triggering a zero-velocity command. To ensure 100% visual coverage of the localized environment—including areas behind the 8cm launcher extension and the robot's blind spots—the system executes a controlled Systematic Rotation.
+
+During the rotation, the vision node operates in high-priority interrupt mode. As ArUco markers enter the camera's frustum, the system logs:
+
+    Unique Identifier (ID): To distinguish between different mission targets.
+
+    Relative Pose: Determining the marker's position relative to the robot's current map coordinate.
+
+<img width="1521" height="600" alt="image" src="https://github.com/user-attachments/assets/6d2f2ecd-c0d9-4c62-845d-7a53922c1848" />
