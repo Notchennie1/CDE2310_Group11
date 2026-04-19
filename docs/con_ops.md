@@ -1,3 +1,20 @@
+**1) Purpose and Scope of the ConOPS**
+This document describes the Concept of Operations for an autonomous TurtleBot3 tasked with navigating a maze-like environment, locating two ArUco markers, and executing a specific task at each marker. The robot operates without human intervention from start to mission completion.
+
+The two tasks are:
+•	Task A — The robot docks in front of Marker ID 1 and fires three projectiles at a static target.
+•	Task B — The robot docks in front of Marker ID 2 and engages a moving target(by identifying and shooting at Marker ID 3 placed inside the target receptacle).
+
+
+Both tasks require the robot to physically dock close to the marker (within ~10 cm) with its heading aligned square to the marker face before executing the task.
+
+**2) System Overview**
+<img width="1357" height="466" alt="image" src="https://github.com/user-attachments/assets/9e01fdbc-7299-4b2a-8f6c-1ff865488789" />
+
+<img width="1337" height="726" alt="image" src="https://github.com/user-attachments/assets/2a6e3e7b-31fa-4040-94c1-8c25c167cb72" />
+
+<img width="1323" height="607" alt="image" src="https://github.com/user-attachments/assets/9d381b2d-f279-4628-bdeb-bc7b4d668ef2" />
+
 **Navigation ConOps**:
 
 The system employs a layered "Brain-to-Brawn" architecture. The high-level SimpleExplorer node handles mission logic, while the Nav2 stack executes low-level trajectory control.
