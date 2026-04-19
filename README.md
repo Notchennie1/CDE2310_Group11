@@ -1,4 +1,4 @@
-# Autonomous Explorer and Task Execution System (NUS EE CDE2310)
+# Autonomous Explorer and Task Execution System (CDE2310)
 
 This repository contains the software stack for an autonomous TurtleBot3 tasked with navigating a maze-like environment, locating two ArUco markers, and executing specific tasks at each marker without human intervention. 
 
