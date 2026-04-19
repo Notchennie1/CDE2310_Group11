@@ -70,7 +70,46 @@ This distance is seen as an ideal buffer for the docking state to take over. Nav
 <img width="1299" height="328" alt="image" src="https://github.com/user-attachments/assets/2f1dd0c0-ff08-4166-8935-50f53408d7f3" /></br>
 
 **6)Docking**<br></br>
+After Nav2 completes the approach, the Mission Manager activates the appropriate task node. DockingBase takes over /cmd_vel exclusively. The docking sequence has four steps executed strictly in order. Each step checks its own error and skips itself if already within threshold.
 
+The FSM for docking logic is as shown below:
+<img width="1019" height="1126" alt="image" src="https://github.com/user-attachments/assets/d84e1db9-97d4-4fc8-9d16-be8d7e81f423" /><br></br>
+Summary of the different states(explained in more detail below):<br></br>
+<img width="1246" height="882" alt="image" src="https://github.com/user-attachments/assets/00f70ef9-6bf9-4c93-9cf9-e95e095e74a0" /><br></br>
+
+*Step 1 — Fix Lateral Offset (fix_lateral)*
+Goal: Get the robot onto the marker’s normal line. This is the imaginary line that comes straight out of the centre of the marker face perpendicular to the wall.
+
+Signal used: rvec_z (orientation.z from /target_3d)
+•	rvec_z > 0 means the robot is to the left of the normal line — rotate right and drive forward
+•	rvec_z < 0 means the robot is to the right of the normal line — rotate left and drive forward
+•	rvec_z ≈ 0 means the robot is on the line — step complete
+
+The robot steers toward the line while creeping forward at 3 cm/s. Getting slightly closer to the marker during this step is acceptable. If the marker is briefly lost during this step the robot continues on the last known rvec_z for up to 2 seconds before stopping.
+
+*Step 2 — Fix Yaw (fix_yaw)*
+Goal: Rotate the robot until it is <=3° off from facing the marker square — i.e. the robot’s heading is aligned with the marker’s normal.
+
+Signal used: rvec_y (orientation.y from /target_3d)
+•	rvec_y ≈ 0 when robot is facing square to the marker
+•	Positive rvec_y — rotate in the positive angular.z direction
+•	No forward movement during this step
+
+*Step 3 — Visual Servo Approach (visual_servo)*
+Goal: Drive forward toward the marker while continuously correcting lateral drift using position.y.
+
+•	Forward speed is proportional to remaining distance: min(0.04, max(0.02, 0.3 × (z − stop_dist)))
+•	Angular correction: angular.z = clamp(2.0 × position.y, ±0.3 rad/s)
+•	If position.y > 4 cm, slow to 2 cm/s and correct first before speeding up
+•	If marker is lost and depth < 35 cm, transition immediately to Step 4
+•	If marker is lost and depth > 35 cm, stop and wait for reacquisition
+
+This step runs until either the marker is lost at close range (expected — camera Field Of View cannot see marker below ~25–30 cm) or the robot reaches stop_dist via the camera reading.
+
+*Step 4 — Odometry Drive (odom_drive)*
+Goal: Cover the last 15–25 cm straight in when the marker is no longer visible.
+
+When the marker disappears at close range, the node records the last known depth and drives straight forward for (last_depth − stop_dist) metres using odometry. At this short distance (~0.2 m) odometry drift is 1–2 cm which is acceptable. Forward speed is 4 cm/s
 
 **7)Task Logic**<br></br>
 
