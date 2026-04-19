@@ -1,7 +1,7 @@
 This document is made to review our team's incapability to finish the mission. We believe that this was down mainly to our mechanical design and navigation algorithm. The reason 
 we believe that the docking and shooting logic worked was because of our relative success in the white flag objectives where we were able to dock and shoot(although not accurately).
 ---
-### Navigation Challenges ###<br></br>
+### Navigation Challenges<br></br>
 
 ## Development Journey: The Sim-to-Real Gap
 While frontier exploration functioned seamlessly in **Gazebo**, transitioning to physical hardware exposed significant system integration challenges.
