@@ -20,8 +20,9 @@ Because the robot didn't have a robust way to "cross off" areas it had already e
 Upon reflection, one potential way we could have kept away from these areas was to have a list of visited frontiers. Each time a new goal is sent, its distance from all the points in the visited_frontiers list could be computed and if it were too close, this goal could have been rejected. Looking back, this is also how it was implemented in the open source code we took reference from. However, the reliance on Gazebo for testing and subsequent late pivot meant a lack of real hardware testing which resulted in us not being prepared for edge cases.
 
 ## Key Lessons Learned
-Incremental Integration: Complexity should be added only after the minimal viable system is stable. Building "hardware-first" would have surfaced timing issues earlier.
-Sensor Governance: A deep-dive into sensor metadata—specifically QoS policies and update rates—is a prerequisite for any integration.
-Sim-to-Real Variance: Simulation is a controlled environment; physical hardware introduces non-deterministic variables (sensor noise, clock drift) that require robust, "compliant" parameter tuning.
-Systematic Debugging: Interface failures are often buried in the communication layer. Examining the "plumbing" (ROS 2 topics/QoS) is as important as the high-level logic
+
+Incremental Integration: Complexity should be added only after the minimal viable system is stable. Building "hardware-first" would have allowed earlier pivot.<br></br>
+Sensor Governance: A deep-dive into sensor metadata—specifically QoS policies and update rates—is a prerequisite for any integration.<br></br>
+Sim-to-Real Variance: Simulation is a controlled environment; physical hardware introduces non-deterministic variables (sensor noise, clock drift) that require robust, "compliant" parameter tuning.<br></br>
+Systematic Debugging: Interface failures are often buried in the communication layer. Examining the "plumbing" (ROS 2 topics/QoS) is as important as the high-level logic.<br></br>
 ---
