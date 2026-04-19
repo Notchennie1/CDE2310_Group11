@@ -160,7 +160,7 @@ The software runs across two compute nodes:
 | OC-02 | Mission time starts when the operator requests it, or when the robot moves off the start line — whichever comes first. |
 | OC-03 | Any interruption to the system or terminal by anyone (including TA intervention) ends the current mission attempt. |
 | OC-04 | The team may re-attempt the mission as many times as desired within the 25-minute time limit. |
-| OC-05 | At the 14-minute mark, the team may forfeit competitive scoring and attempt partial scoring from the delivery zones directly. |
+| OC-05 | At the 19-minute mark, the team may forfeit competitive scoring and attempt partial scoring from the delivery zones directly. |
 | OC-06 | The User Manual (max 5 pages, printed) must pass TA inspection before the mission is allowed to begin. |
 
 
