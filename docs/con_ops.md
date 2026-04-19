@@ -9,81 +9,43 @@ The two tasks are:<br></br>
 
 Both tasks require the robot to physically dock close to the marker (within ~10 cm) with its heading aligned square to the marker face before executing the task.
 
-**2) System Overview**
+**2) System Overview**<br></br>
 <img width="1357" height="466" alt="image" src="https://github.com/user-attachments/assets/9e01fdbc-7299-4b2a-8f6c-1ff865488789" />
 
-<img width="1374" height="738" alt="image" src="https://github.com/user-attachments/assets/dff54edd-cb93-4f10-ae50-ae91b9e2dece" />
+<img width="1411" height="1115" alt="image" src="https://github.com/user-attachments/assets/18c84e1e-2811-448f-b450-244af7a36166" />
+<img width="1336" height="732" alt="image" src="https://github.com/user-attachments/assets/a06416ce-483e-43a8-80a2-d2935bbffbef" />
+
 
 <img width="1318" height="492" alt="image" src="https://github.com/user-attachments/assets/676c7155-3632-42bd-8847-9e6b9b2b353e" />
 
+**3) Exploration **
+<br></br>
+*3.1 Overview*
+The explorer uses Wavefront Frontier Detection (WFD) — a BFS-based algorithm that finds the boundary between known free space and unknown space. The robot navigates to these boundaries to progressively map the environment and expose marker locations to the camera.
+<br></br>
 
-**Navigation ConOps**:
+*3.2 Frontier Detection and Algorithm*
+<img width="1359" height="456" alt="image" src="https://github.com/user-attachments/assets/e5352f2f-9ed5-4265-9455-b59696f9be3a" />
+<br></br>
+A frontier cell is an unknown cell (-1 in the occupancy grid) that has at least one free neighbour (cost 0–65) and no obstacle neighbours (cost > 65). Frontiers are grouped into clusters. Each cluster centroid becomes a candidate navigation goal. The number 65 comes from testing and tuning. While our occupancy grid outputs a score of ~30 for completely free space, it outputs around 60 for heavily crowded spaces. Meanwhile, solid walls are given a score of 100. 65 is chosen such that the robot is "brave" enough to navigate tight spaces but does not crash into walls/obstacles.
 
-The system employs a layered "Brain-to-Brawn" architecture. The high-level SimpleExplorer node handles mission logic, while the Nav2 stack executes low-level trajectory control.
-The navigation stack can be split into 3 phases which determine the robot's movement.
+**Algorithm**
+<img width="1345" height="604" alt="image" src="https://github.com/user-attachments/assets/2340004e-76a5-4b7e-8da9-87a4802ec386" /><br></br>
 
-**Phase I: Finding Frontiers**
-The system identifies unmapped territory using a Wavefront Frontier Detection (WFD) algorithm.
+Following this, each frontier is scored as such :
+<img width="1139" height="98" alt="image" src="https://github.com/user-attachments/assets/c30a4c36-ada2-4b1c-bd81-4952d282da52" /><br></br>
 
-**WFD Logic****: The robot scans the OccupancyGrid for cells where "Free Space" (0≤C≤65) meets "Unknown Space" (−1).
+Explanation:
+size / (dist + 0.1) — prefer large nearby frontiers (likely to reveal more map)
+0.3 × dist — distance bonus to still encourage deep exploration
+Frontiers within 20 cm of robot or within 35 cm of a blacklisted goal are filtered out
 
-**Search Bias**: The mission profile is set to Farthest-First. This prioritizes long-range paths to reach the perimeter of the maze quickly, ensuring a "broad-to-narrow" mapping strategy.
+The highest-scoring frontier is sent to Nav2 as the next goal. Each time a frontier is reached, the bot performs a 360 degree spin at 0.6rad/s. This scan enables the bot to actively look for the markers. As identifying targets and shooting into them is the main goal of this mission, this spin is performed at a relatively slow speed to give the bot the best chance to identify markers
 
-**Geofence Control**: Hard-coded spatial constraints ensure the platform does not attempt to "jailbreak" the mission boundary into the infinite void. This prevents the robot from identifying small gaps between maze walls as potential frontiers.
-
-<img width="1694" height="834" alt="image" src="https://github.com/user-attachments/assets/86000757-fe43-4c5c-82a1-825c8bc99062" />
-
-**Phase II: High-Precision Navigation**
-Once a long-range goal is identified, the Dynamic Window Approach (DWB) planner(one of the planners in Nav2's long list of planners) takes over.
-In this phase, the Nav2 Controller Server translates the Global Path into real-time velocity commands (v,ω). Because the robot is asymmetrical, Phase II focuses on footprint-aware collision avoidance, ensuring that the 8cm "tail"(because of the launcher) does not clip a wall during a pivot or transit.
-
-**2.1 The Choice of Local Planner: DWB**
-The mission employs the Dynamic Window Approach (DWB) as its path planner. This planner was selected specifically for its "Look-Ahead" sampling capabilities. Unlike standard pursuit algorithms, DWB simulates the robot's physical kinematics into the future, evaluating potential trajectories against the robot's exact asymmetric footprint.
-
-This ensures that the 8cm launcher extension is treated as a hard collision boundary. By calculating "Safe Velocity Envelopes," the planner ensures the "tail" clears obstacles during both linear transits and complex pivots.
-
-
-**2.2 Parameter Calibration**
-To navigate a high-stakes environment with a non-symmetrical chassis, we have "tuned" how the robot perceives danger. By adjusting the following three variables, we transform a standard navigation stack into a high-precision corridor pilot.
-
-Key Navigation Variables Defined:
-
-    Inflation Radius: The "invisible bubble" around a wall that the robot considers dangerous.
-
-    Cost Scaling Factor: Determines how quickly the "fear" of a wall drops off as the robot moves away from it.
-
-    Base Obstacle Scale: A penalty multiplier that tells the robot how much it should prioritize staying away from obstacles versus reaching its goal.
-
-The "Needle-Threading" Strategy:
-
-For this mission, we expect the narrowest gaps to be approximately 40cm. Since the TurtleBot 3 Burger with its launcher extension is roughly 22cm wide, we have about 9cm of clearance on either side.
-
-    The Inflation Choice (0.12m):
-    We set the Inflation Radius to 0.12m because if it were any larger (like the standard 0.15m or 0.20m), the "danger bubbles" from two opposing walls would overlap in a 40cm gap. This would make the gap look like a solid wall to the robot. At 0.12m, we leave a 16cm "clear" channel in the center, allowing the robot to recognize the gap as a valid path.
-
-    The Scaling Logic (15.0):
-    We use a high Cost Scaling Factor of 15.0 to make the "fear" drop off aggressively. In a tight 40cm space, the robot is always close to a wall. If the scaling were low, the robot would constantly slow down or "shiver" because it feels surrounded by danger. This high value tells the robot: "If you aren't touching the wall's 12cm buffer, don't worry about it—keep driving."
-
-    The Obstacle Penalty (25.0):
-    Despite making the robot "braver" with the scaling, we picked a massive Base Obstacle Scale of 25.0. This is our safety insurance. It ensures that if the robot’s 8cm launcher extension even thinks about clipping a wall, the penalty becomes so high that the controller will instantly force a correction. We want the robot to be terrified of actual contact, but comfortable moving through tight spaces.
-
-By prioritizing Path Alignment (64.0) and locking our speed at a steady 0.10m/s, we effectively put the robot on "virtual rails." This prevents any side-to-side wobbling that would cause the lopsided 8cm tail to swing into a barrier. The slow speed ensures the LiDAR has zero "motion blur," and the computer has plenty of time to calculate the perfect, collision-free trajectory through the center of every 40cm corridor.
-<img width="2288" height="405" alt="image" src="https://github.com/user-attachments/assets/fc89219e-86c6-41a1-bf85-c246776fdd2b" />
+Overall, the exploration follows a Finite State Machine(FSM) which is illustrated as such 
+<img width="1330" height="642" alt="image" src="https://github.com/user-attachments/assets/b34b42a0-460d-4c2c-85d4-e5a5f27ad0b1" />
 
 
 
-**Phase III : Aruco Tracking**
-Phase III represents the Scientific Objective State of the mission. Once the Phase II transit is successfully concluded and the platform has arrived at a high-value waypoint (Frontier), the system transitions from a movement-centric mode to a data-collection mode. The primary goal of Phase III is the systematic visual sweep of the environment to identify and log ArUco markers.
 
-Upon arrival at the Phase II goal, the Nav2 action client returns a "Success" status, immediately triggering a zero-velocity command. To ensure 100% visual coverage of the localized environment—including areas behind the 8cm launcher extension and the robot's blind spots—the system executes a controlled Systematic Rotation.
 
-During the rotation, the vision node operates in high-priority interrupt mode. As ArUco markers enter the camera's frustum, the system logs:
-
-    Unique Identifier (ID): To distinguish between different mission targets.
-
-    Relative Pose: Determining the marker's position relative to the robot's current map coordinate.
-
-<img width="1521" height="600" alt="image" src="https://github.com/user-attachments/assets/6d2f2ecd-c0d9-4c62-845d-7a53922c1848" />
-
-3. ROS2 Topic Interface
-TopicTypePublisherSubscriberPurpose/target_pixelsFloat32MultiArraycamera_nodepnp_nodeRaw ArUco corner pixels + ID/target_3dPoseStampedpnp_nodeMissionManager, task nodes3D marker pose in camera_link frame/explorer_activeBoolMissionManagersimple_explorerStart/stop exploration/task_a_activeBoolMissionManagertask_a_nodeActivate Task A docking/task_b_activeBoolMissionManagertask_b_nodeActivate Task B docking/task_statusStringtask nodesMissionManager"SUCCESS" when task complete/fireBooltask nodesservo_nodeTrigger one projectile/cmd_velTwistNav2 or DockingBaserobotVelocity commands/mapOccupancyGridSLAM (Cartographer)simple_explorerMap for frontier detection/odomOdometryrobotall nodesRobot position
