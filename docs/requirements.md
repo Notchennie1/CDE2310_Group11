@@ -163,34 +163,8 @@ The software runs across two compute nodes:
 | OC-05 | At the 14-minute mark, the team may forfeit competitive scoring and attempt partial scoring from the delivery zones directly. |
 | OC-06 | The User Manual (max 5 pages, printed) must pass TA inspection before the mission is allowed to begin. |
 
----
 
-## 6. Scoring Requirements
-
-| ID | Requirement |
-|----|-------------|
-| SC-01 | The system shall be capable of achieving full map closure for competitive timing scoring. |
-| SC-02 | The system shall complete Station A delivery to qualify for mission achievement scoring. |
-| SC-03 | The system shall complete Station B delivery to maximise mission achievement score. |
-| SC-04 | Mission achievement scoring takes precedence over time-based competitive scoring. |
-| SC-05 | The final score shall reflect the best attempt across multiple mission tries within the 25-minute window. |
-
----
-
-## 7. Out of Scope
-
-The following items from the mission brief are explicitly not implemented in this system:
-
-| Item | Reason |
-|------|--------|
-| Station C – Lift Lobby navigation | Out of scope for this implementation |
-| Station D – Level 2 delivery | Out of scope for this implementation |
-| Lift API integration (BON-02 to BON-04) | Out of scope for this implementation |
-| RFID marker detection | System uses ArUco exclusively |
-
----
-
-## 8. Traceability Summary
+## 6. Traceability Summary
 
 | Mission Objective | Related Requirements |
 |-------------------|----------------------|
@@ -203,6 +177,5 @@ The following items from the mission brief are explicitly not implemented in thi
 | Operational compliance | OC-01 to OC-06, NF-01 to NF-08 |
 | Scoring | SC-01 to SC-05 |
 
----
 
 *End of Requirements Specification — v1.0*
