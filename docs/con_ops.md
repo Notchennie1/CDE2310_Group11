@@ -1,4 +1,5 @@
 **1) Purpose and Scope of the ConOPS**
+<br></br>
 This document describes the Concept of Operations for an autonomous TurtleBot3 tasked with navigating a maze-like environment, locating two ArUco markers, and executing a specific task at each marker. The robot operates without human intervention from start to mission completion.
 
 The two tasks are:
@@ -13,7 +14,8 @@ Both tasks require the robot to physically dock close to the marker (within ~10 
 
 <img width="1337" height="726" alt="image" src="https://github.com/user-attachments/assets/2a6e3e7b-31fa-4040-94c1-8c25c167cb72" />
 
-<img width="1323" height="607" alt="image" src="https://github.com/user-attachments/assets/9d381b2d-f279-4628-bdeb-bc7b4d668ef2" />
+<img width="1318" height="492" alt="image" src="https://github.com/user-attachments/assets/676c7155-3632-42bd-8847-9e6b9b2b353e" />
+
 
 **Navigation ConOps**:
 
