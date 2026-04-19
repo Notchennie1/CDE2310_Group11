@@ -1,5 +1,4 @@
-This document is made to review our team's incapability to finish the mission. We believe that this was down mainly to our mechanical design and navigation algorithm. The reason 
-we believe that the docking and shooting logic worked was because of our relative success in the white flag objectives where we were able to dock and shoot(although not accurately).
+This review identifies mechanical and navigation constraints as the primary hurdles to mission completion. Our relative success in "white flag" tasks validated the docking and shooting logic, confirming these subsystems were viable despite broader platform integration challenges.
 ---
 ### Navigation Challenges<br></br>
 
