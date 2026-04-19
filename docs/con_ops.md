@@ -2,8 +2,8 @@
 <br></br>
 This document describes the Concept of Operations for an autonomous TurtleBot3 tasked with navigating a maze-like environment, locating two ArUco markers, and executing a specific task at each marker. The robot operates without human intervention from start to mission completion.
 
-The two tasks are:
-•	Task A — The robot docks in front of Marker ID 1 and fires three projectiles at a static target.
+The two tasks are:<br></br>
+•	Task A — The robot docks in front of Marker ID 1 and fires three projectiles at a static target.<br></br>
 •	Task B — The robot docks in front of Marker ID 2 and engages a moving target(by identifying and shooting at Marker ID 3 placed inside the target receptacle).
 
 
