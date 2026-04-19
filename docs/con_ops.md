@@ -17,6 +17,8 @@ Both tasks require the robot to physically dock close to the marker (within ~10 
 
 <img width="1318" height="492" alt="image" src="https://github.com/user-attachments/assets/676c7155-3632-42bd-8847-9e6b9b2b353e" />
 
+<br></br>
+
 **3) Exploration**
 <br></br>
 *3.1 Overview*
@@ -44,7 +46,7 @@ The highest-scoring frontier is sent to Nav2 as the next goal. Each time a front
 Overall, the exploration follows a Finite State Machine(FSM) which is illustrated as such 
 <img width="1330" height="642" alt="image" src="https://github.com/user-attachments/assets/b34b42a0-460d-4c2c-85d4-e5a5f27ad0b1" />
 
-
+<br></br>
 **4)Detection Pipeline**<br></br>
 This pipeline runs continually from launch and consists of two nodes; the camera_node running on the Raspberry Pi and the pnp_node running on the remote PC.
 The camera node captures frames at 30 fps at 320×240 resolution. It scans for Aruco markers using OpenCV's ArUco detector (DICT_4X4_50). When a marker is detected, this node publishes the corner pixels and ID of the marker as follows: 
@@ -69,6 +71,8 @@ When a marker of appropriate ID is detected by the pnp_node, the mission is move
 This distance is seen as an ideal buffer for the docking state to take over. Nav2 is used such that the path planner can compute a path away from obstacles and it is assumed there will be no obstacles <= 70cm away from the target.<br></br>
 <img width="1299" height="328" alt="image" src="https://github.com/user-attachments/assets/2f1dd0c0-ff08-4166-8935-50f53408d7f3" /></br>
 
+<br></br>
+
 **6)Docking**<br></br>
 After Nav2 completes the approach, the Mission Manager activates the appropriate task node. DockingBase takes over /cmd_vel exclusively. The docking sequence has four steps executed strictly in order. Each step checks its own error and skips itself if already within threshold.
 
@@ -76,6 +80,8 @@ The FSM for docking logic is as shown below:
 <img width="1019" height="1126" alt="image" src="https://github.com/user-attachments/assets/d84e1db9-97d4-4fc8-9d16-be8d7e81f423" /><br></br>
 Summary of the different states(explained in more detail below):<br></br>
 <img width="1246" height="882" alt="image" src="https://github.com/user-attachments/assets/00f70ef9-6bf9-4c93-9cf9-e95e095e74a0" /><br></br>
+
+There is a four step process to execute docking in the system. 
 
 *Step 1 — Fix Lateral Offset (fix_lateral)*
 Goal: Get the robot onto the marker’s normal line. This is the imaginary line that comes straight out of the centre of the marker face perpendicular to the wall.
@@ -111,7 +117,31 @@ Goal: Cover the last 15–25 cm straight in when the marker is no longer visible
 
 When the marker disappears at close range, the node records the last known depth and drives straight forward for (last_depth − stop_dist) metres using odometry. At this short distance (~0.2 m) odometry drift is 1–2 cm which is acceptable. Forward speed is 4 cm/s
 
+<br></br>
+
+
 **7)Task Logic**<br></br>
+*Task A*
+Once docked, Task_A_Controller(the node controlling Task A) fires three projectiles at the static target using a servo motor. The firing sequence runs in a background thread to avoid blocking the ROS2 node.
+
+  •	Shot 1 fired immediately on docking<br></br>
+  •	5 second pause between each shot<br></br>
+  •	After Shot 3, the bot backs up ~15 cm to clear the costmap inflation zone<br></br>
+  •	Publishes SUCCESS on /task_status<br></br>
+  •	Mission Manager resumes exploration
+
+*Task B*
+Once docked, Task_B_Controller(the node controlling Task A) fires three projectiles at the dynamic target using a servo motor. The firing sequence runs in a background thread to avoid blocking the ROS2 node. The dynamic target is tracked using an Aruco of ID 3. Each time an aruco of ID 3 is seen one ping pong ball is fired. This happens 3 times as follows: <br></br>
+
+  •	Shot 1 fired on first marker 3 sighting<br></br>
+  •	After Shot 3, the bot backs up ~15 cm to clear the costmap inflation zone<br></br>
+  •	Publishes SUCCESS on /task_status<br></br>
+  •	Mission Manager resumes exploration
+
+*Post-Task Backup*
+After any task completes but before publishing SUCCESS, the robot reverses at 5 cm/s for 3 seconds (~15 cm). This is critical because at 10 cm from the wall the robot is inside Nav2’s costmap inflation zone. Without backing up first, Nav2 will see the robot as being in collision and enter recovery behaviour (oscillation) when exploration resumes.
+
+<br></br>
 
 
 **8)Mission Overview**<br></br>
@@ -141,5 +171,3 @@ DONE
 Publishes /explorer_active = False
 All nodes idle
 Mission complete
-
-<br></br>
