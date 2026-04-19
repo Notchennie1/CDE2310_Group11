@@ -21,10 +21,15 @@ Upon reflection, one potential way we could have kept away from these areas was 
 
 
 ## Key Lessons Learned
-Incremental Integration: Complexity should be added only after the minimal viable system is stable. Building "hardware-first" would have allowed earlier pivot.<br></br>
-Sensor Governance: A deep-dive into sensor metadata—specifically QoS policies and update rates—is a prerequisite for any integration.<br></br>
-Sim-to-Real Variance: Simulation is a controlled environment; physical hardware introduces non-deterministic variables (sensor noise, clock drift) that require robust, "compliant" parameter tuning.<br></br>
-Systematic Debugging: Interface failures are often buried in the communication layer. Examining the "plumbing" (ROS 2 topics/QoS) is as important as the high-level logic.<br></br>
+Test on Hardware Early: We relied too much on Gazebo. While simulation is good for basic logic, it doesn't account for real-world issues like sensor noise or clock drift. We learned that a project isn't actually "working" until it has been tested on the physical robot.<br></br>
+
+Check Data Policies First: We spent a lot of time debugging our SLAM logic when the real problem was just a QoS mismatch between the LiDAR and the mapper. In the future, checking topic metadata and communication policies will be our first troubleshooting step.<br></br>
+
+Prioritize Reliable Movement: We tried to implement a complex utility-based system before we had the basics down. We realized it’s much better to have a simple, stable algorithm like Wavefront that actually moves the robot than a sophisticated one that gets stuck in a logic loop.
+
+Track Robot State and History: A robot needs to know where it has already been. Because we didn't have a way to "blacklist" visited frontiers, the robot had no way to tell the difference between new territory and spots it had already scanned. Every autonomous mission needs a clear method for tracking completed tasks.
+
+Leave a Buffer for Integration: Switching to a new algorithm 48 hours before the deadline meant we had no time to catch edge cases. We learned that finishing the code is only half the job—the other half is watching the robot run long enough to find the logic flaws that only show up after several minutes of operation.
 
 
 
