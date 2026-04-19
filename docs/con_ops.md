@@ -1,13 +1,12 @@
 **1) Purpose and Scope of the ConOPS**
 <br></br>
 This document describes the Concept of Operations for an autonomous TurtleBot3 tasked with navigating a maze-like environment, locating two ArUco markers, and executing a specific task at each marker. The robot operates without human intervention from start to mission completion.
-
 The two tasks are:<br></br>
 •	Task A — The robot docks in front of Marker ID 1 and fires three projectiles at a static target.<br></br>
 •	Task B — The robot docks in front of Marker ID 2 and engages a moving target(by identifying and shooting at Marker ID 3 placed inside the target receptacle).
-
-
 Both tasks require the robot to physically dock close to the marker (within ~10 cm) with its heading aligned square to the marker face before executing the task.
+
+<br></br>
 
 **2)Mission Overview**<br></br>
 The overall mission Finite State Machine is illustrated as such
@@ -15,7 +14,7 @@ The overall mission Finite State Machine is illustrated as such
 
 *State Descriptions*<br></br>
 
-**SEARCHING**
+SEARCHING
 Publishes /explorer_active = True
 Listens on /target_3d for marker IDs in {1, 2}
 On detection: transforms pose to map frame via TF2, computes approach waypoint, transitions to APPROACHING
@@ -37,8 +36,7 @@ Publishes /explorer_active = False
 All nodes idle
 Mission complete
 
-
-
+<br></br>
 
 **3) System Overview**<br></br>
 <img width="1357" height="466" alt="image" src="https://github.com/user-attachments/assets/9e01fdbc-7299-4b2a-8f6c-1ff865488789" />
@@ -77,6 +75,15 @@ Overall, the exploration follows a Finite State Machine(FSM) which is illustrate
 <img width="1330" height="642" alt="image" src="https://github.com/user-attachments/assets/b34b42a0-460d-4c2c-85d4-e5a5f27ad0b1" />
 
 
+**5)Detection Pipeline**<br></br>
+This pipeline runs continually from launch and consists of two nodes; the camera_node running on the Raspberry Pi and the pnp_node running on the remote PC.
+The camera node captures frames at 30 fps at 320×240 resolution. It scans for Aruco markers using OpenCV's ArUco detector (DICT_4X4_50). When a marker is detected, this node publishes the corner pixels and ID of the marker as follows: 
 
+<img width="1114" height="346" alt="image" src="https://github.com/user-attachments/assets/cae94b66-3cf9-49f6-8f82-c17b37ed93f5" /><br></br>
 
+Meanwhile, the pnp node subsribes to the targer_pixels topic(refer to image above) and runs cv2.solvePnP (IPPE_SQUARE method) using the camera calibration matrix from camera_calibration.npz. It outputs the translation vector (tvec) and rotation vector (rvec) — the full 3D pose of the marker in the camera frame. It publishes a node called /target_3d as a PoseStamped message which is used by the docking and approaching nodes. 
 
+<img width="1435" height="687" alt="image" src="https://github.com/user-attachments/assets/b1bc742f-ddd2-4dd8-8eeb-f1afaf23283e" /><br></br>
+
+The convention of OpenCV's rvec and tvec is as attached
+<img width="1339" height="977" alt="image" src="https://github.com/user-attachments/assets/f476410b-f83a-45a4-bbfb-a30d94d6e93e" />
