@@ -9,7 +9,38 @@ The two tasks are:<br></br>
 
 Both tasks require the robot to physically dock close to the marker (within ~10 cm) with its heading aligned square to the marker face before executing the task.
 
-**2) System Overview**<br></br>
+**2)Mission Overview**<br></br>
+The overall mission Finite State Machine is illustrated as such
+<img width="1074" height="967" alt="image" src="https://github.com/user-attachments/assets/982ef4f9-22c8-4455-afe5-6d80719a5ba1" /><br></br>
+
+*State Descriptions*<br></br>
+
+**SEARCHING**
+Publishes /explorer_active = True
+Listens on /target_3d for marker IDs in {1, 2}
+On detection: transforms pose to map frame via TF2, computes approach waypoint, transitions to APPROACHING
+
+APPROACHING
+Publishes /explorer_active = False
+Sends Nav2 NavigateToPose goal (70cm in front of marker)
+Monitors marker position — if it shifts >15cm, recomputes goal
+On Nav2 SUCCESS: verifies robot is within 1m, activates task node, transitions to DOCKING
+
+DOCKING
+Publishes /task_a_active = True or /task_b_active = True
+DockingBase runs the 4-step sequence
+Waits for /task_status = "SUCCESS"
+On SUCCESS: adds marker ID to tasks_completed, deactivates task node
+
+DONE
+Publishes /explorer_active = False
+All nodes idle
+Mission complete
+
+
+
+
+**3) System Overview**<br></br>
 <img width="1357" height="466" alt="image" src="https://github.com/user-attachments/assets/9e01fdbc-7299-4b2a-8f6c-1ff865488789" />
 
 <img width="1411" height="1115" alt="image" src="https://github.com/user-attachments/assets/18c84e1e-2811-448f-b450-244af7a36166" />
@@ -18,7 +49,7 @@ Both tasks require the robot to physically dock close to the marker (within ~10 
 
 <img width="1318" height="492" alt="image" src="https://github.com/user-attachments/assets/676c7155-3632-42bd-8847-9e6b9b2b353e" />
 
-**3) Exploration **
+**4) Exploration**
 <br></br>
 *3.1 Overview*
 The explorer uses Wavefront Frontier Detection (WFD) — a BFS-based algorithm that finds the boundary between known free space and unknown space. The robot navigates to these boundaries to progressively map the environment and expose marker locations to the camera.
