@@ -21,9 +21,9 @@ Upon reflection, one potential way we could have kept away from these areas was 
 
 
 ## Key Lessons Learned
-Test on Hardware Early: We relied too much on Gazebo. While simulation is good for basic logic, it doesn't account for real-world issues like sensor noise or clock drift. We learned that a project isn't actually "working" until it has been tested on the physical robot.<br></br>
+Test on Hardware Early: We relied too much on Gazebo. While simulation is good for basic logic, it doesn't account for real-world issues like sensor noise or clock drift. We learned that a project isn't actually "working" until it has been tested on the physical robot.
 
-Check Data Policies First: We spent a lot of time debugging our SLAM logic when the real problem was just a QoS mismatch between the LiDAR and the mapper. In the future, checking topic metadata and communication policies will be our first troubleshooting step.<br></br>
+Check Data Policies First: We spent a lot of time debugging our SLAM logic when the real problem was just a QoS mismatch between the LiDAR and the mapper. In the future, checking topic metadata and communication policies will be our first troubleshooting step.
 
 Prioritize Reliable Movement: We tried to implement a complex utility-based system before we had the basics down. We realized it’s much better to have a simple, stable algorithm like Wavefront that actually moves the robot than a sophisticated one that gets stuck in a logic loop.
 
