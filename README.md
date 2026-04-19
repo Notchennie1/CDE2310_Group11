@@ -1,8 +1,7 @@
-# Autonomous Explorer and Task Execution System (CDE2310)
-
 ## Video of Mission 
 https://youtu.be/aeAUSHNqR1s
 
+# Autonomous Explorer and Task Execution System (CDE2310)
 This repository contains the software stack for an autonomous TurtleBot3 tasked with navigating a maze-like environment, locating two ArUco markers, and executing specific tasks at each marker without human intervention. 
 
 The codebase in this repository is derived from two sub-projects:
