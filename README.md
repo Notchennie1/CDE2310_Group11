@@ -6,7 +6,7 @@ The codebase in this repository is derived from two sub-projects:
 * **[autonomous_explorer](https://github.com/Mayuresh2706/autonomous_explorer)**: Handles the autonomous frontier-based exploration system integrating Google Cartographer SLAM with the Nav2 stack.
 * **[detection_final](https://github.com/Mayuresh2706/detection_final)**: Handles the visual detection pipeline (ArUco markers) and the complex docking and task execution logic.
 
-## 🚀 Project Overview
+## Project Overview
 
 The robot operates completely autonomously from start to mission completion, following a Finite State Machine (FSM) that transitions between exploration, approaching, docking, and task execution. 
 
@@ -14,7 +14,7 @@ The robot operates completely autonomously from start to mission completion, fol
 * **Task A**: The robot explores until it finds **Marker ID 1**, docks in front of it (within ~10 cm), and fires three projectiles at a static target.
 * **Task B**: The robot explores until it finds **Marker ID 2**, docks in front of it, and engages a moving target by identifying and shooting at **Marker ID 3** placed inside the target receptacle.
 
-## 🛠 System Architecture
+## System Architecture
 
 ### 1. Exploration
 The system uses a **Wavefront Frontier Detection (WFD)** algorithm (BFS-based) to find the boundary between known free space and unknown space. 
@@ -39,7 +39,7 @@ Once a target marker is spotted, the robot pauses exploration and switches to th
 ### 4. Task Execution
 Once docked, the respective task controller fires the servo-driven launcher. After firing all three projectiles, the robot safely reverses by ~15cm to clear the Nav2 inflation zone before resuming exploration.
 
-## ⚙️ Prerequisites and Setup
+## Prerequisites and Setup
 
 * **ROS 2 Humble**
 * **TurtleBot3 Packages (Burger model)**
@@ -75,7 +75,7 @@ This launch file starts Google Cartographer, the Nav2 stack, the autonomous expl
 ros2 launch aruco_detection laptop.launch.py
 ```
 
-## 📄 Documentation
+## Documentation
 
 For a detailed breakdown of the system logic, control loops, and node architectures, please refer to the documentation in the `docs/` folder:
 * `docs/con_ops.md` - Complete Concept of Operations and FSM diagrams.
