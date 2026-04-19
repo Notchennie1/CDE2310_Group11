@@ -7,7 +7,7 @@
 
 This document describes the mechanical design of Group G11's Autonomous Mobile Robot (AMR), built on the TurtleBot3 Burger platform. The mechanical system comprises three subsystems: the **ball magazine**, the **launcher mechanism**, and the **sensor/electronics mounting**. The overall design philosophy prioritises compactness and reliability, adding no more than 5 cm in height above the stock TurtleBot3 footprint (178 mm × 138 mm × 192 mm).
 
-![[Pasted image 20260419113034.png]]
+![alt text](/docs/images/image.png)
 
 ---
 
@@ -16,7 +16,7 @@ This document describes the mechanical design of Group G11's Autonomous Mobile R
 ### 2.1 Design
 The magazine is a U-shaped feed path designed to store all 9 ping pong balls required for the full mission (3 balls × 3 delivery stations). The U-shape maximises ball capacity within the robot's footprint by routing balls down one vertical column, around a curved bottom section, and back up the other side into the barrel feed point.
 
-![[FeedPath_WireFrame.jpg]]
+![alt text](/docs/images/image1.png)
 
 ### 2.2 Ball Loading
 The top of the U-path is open. Balls are loaded by simply dropping them in from the top — no cap, latch, or tool is required. The recommended loading order is to fill one column completely before the other.
@@ -24,7 +24,7 @@ The top of the U-path is open. Balls are loaded by simply dropping them in from 
 ### 2.3 Feed Mechanism
 Ball feeding is entirely **gravity-driven** — no motors or active mechanisms are involved. Balls queue through the path and feed into the barrel one at a time under their own weight.
 
-![[Pasted image 20260419113058.png]]
+![alt text](/docs/images/image-1.png)
 
 The curved section of the U-path has a bend radius of **R43 mm** with, and a straight run of **130 mm**. the path maintains a 7° incline at the end of the path, with a higher 8° incline towards the end of the path to ensure balls do not get stuck up top.
 
@@ -38,10 +38,10 @@ The magazine attaches to the launcher barrel via **4 screws** at the barrel inte
 ### 3.1 Operating Principle
 The launcher uses a **servo motor** driving a **polycarbonate flex-spring arm**. As the servo rotates, the polycarbonate strip bends and stores elastic potential energy. Cushioning tape lining the tip of the barrel creates a friction seal that holds the ball in place while energy accumulates. Once the bending force exceeds the friction threshold, the ball is released instantaneously — producing a consistent, repeatable launch without the need for a flywheel or pneumatic system.
 
-![[camphoto_1254324197.jpg|677]]
+![alt text](/docs/images/image-2.png)
 
 ### 3.2 Launcher Sequence
-![[Pasted image 20260419120234.png]]
+![alt text](/docs/images/image-3.png)
 The four-frame CAD sequence below illustrates the full firing cycle:
 1. Servo arm at rest; ball seated at barrel tip, held by friction tape.
 2. Servo rotates; polycarbonate strip begins to flex and load energy.
@@ -74,7 +74,7 @@ The Raspberry Pi is mounted **vertically**, offering two key advantages over a c
 | Barrel height     | 134 mm from ground    |
 | Magazine capacity | 9 ping pong balls     |
 
-![[Pasted image 20260419113119.png]]
+![alt text](/docs/images/image-4.png)
 
 The robot remains compact and manoeuvrable within the warehouse maze, with no protrusions beyond the TurtleBot3 footprint in the horizontal plane.
 
