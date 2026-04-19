@@ -2,42 +2,26 @@ This review identifies mechanical and navigation constraints as the primary hurd
 ---
 ### Navigation Challenges<br></br>
 
+## Autonomous Navigation and Exploration Reflection
+For this mission, we aimed to implement full autonomy on a TurtleBot3, enabling independent environment mapping. Our initial strategy utilized frontier-based exploration via the m_explore(https://github.com/robo-friends/m-explore-ros2) package, using a utility equation to prioritize targets based on proximity and potential information gain.
+
 ## Development Journey: The Sim-to-Real Gap
-While frontier exploration functioned seamlessly in **Gazebo**, transitioning to physical hardware exposed significant system integration challenges.
+While frontier exploration functioned seamlessly in Gazebo, transitioning to physical hardware triggered an extensive debugging cycle. Our primary technical hurdle was the SLAM system:
+SLAM Pivot: We initially moved from SLAM Toolbox to Cartographer to resolve persistent timing errors. Despite synchronizing the Raspberry Pi and workstation via Chrony and increasing transform tolerance, the temporal lag persisted.
+The QoS "Silent Killer": Returning to SLAM Toolbox, we identified the root cause: a Quality of Service (QoS) mismatch. The LiDAR was published with a "Best Effort" policy, while the mapping node required "Reliable" data. Realigning these policies was the breakthrough that finally enabled stable mapping
+Frontier Exploration & FSM Challenges
+Transitioning from mapping to movement revealed a critical failure in the Finite State Machine (FSM). After reaching an initial frontier, the robot would enter a "Search Spin" but become trapped in a logic loop, failing to trigger the transition to the next target.
+Due to time constraints, we abandoned the complex FSM of m_explore and pivoted to a Wavefront Algorithm. This simpler approach provided the reliability needed for consistent navigation. We prioritized stable wall avoidance and parameter tuning over sophisticated utility-based selection, ensuring mission safety over algorithmic complexity'
 
-### 1. The SLAM Pivot & Time Synchronization
-Initial attempts with `SLAM Toolbox` were hindered by perceived timing errors. We pivoted to `Cartographer`, utilizing **Chrony** for Raspberry Pi-to-Workstation clock synchronization and increasing `transform_tolerance`. Despite these efforts, temporal lags persisted, forcing a deeper investigation.
 
-### 2. The QoS "Silent Killer"
-Returning to `SLAM Toolbox`, we identified the root cause of our mapping instability: a **Quality of Service (QoS) mismatch**. The LiDAR published data using a **"Best Effort"** policy, while the mapping node required **"Reliable"** data. Correcting this interface "plumbing" was the breakthrough required to achieve stable SLAM.
-
----
-
-## Frontier Exploration & FSM Challenges
-Movement testing revealed a critical failure in the **Finite State Machine (FSM)** logic. Upon reaching an initial frontier, the robot would initiate a "Search Spin" but become trapped in a logical loop, failing to trigger the transition to the next target.
-
-Due to the looming mission deadline, we abandoned the complex FSM of `m_explore` in favor of a **Wavefront Algorithm**. This simplified our pipeline and enabled reliable navigation, though it required us to prioritize stable wall avoidance and parameter tuning over more sophisticated utility-based selection.
-
----
-
-## Root Cause Analysis: Mission Failure
-Despite the pivot to a more reliable algorithm, the late-stage transition left less than 48 hours for system integration. The primary reason for mission failure was **insufficient testing of edge cases** due to time management constraints.
-
-### The Problem with  Wavefront detection
-Our algorithm lacked a robust **blacklisting system for visited paths**. Consequently, the robot could not "cross off" explored areas. This resulted in an infinite loop where the robot would:
-1. Navigate to a frontier.
-2. Perform a reconnaissance scan.
-3. Immediately re-target the same area because it remained the "largest" detected frontier.
-
-In our final run, the robot repeatedly returned to the starting line. Without a `visited_frontiers` list to reject goals within a specific radius of previous scans, the platform bled crucial mission time until we were forced to "white flag."
-
----
+## Why our algorithm failed
+Although we pivoted to a more reliable exploration algorithm, the late timing of our change gave us less than 48 hours to fully integrate the new navigation pipeline. Consequently, the primary reason for the mission's failure was poor time management, which prevented us from testing critical edge cases. Specifically, while our algorithm was reliably able to avoid obstacles, it lacked a secure blacklisting system for visited paths.
+Because the robot didn't have a robust way to "cross off" areas it had already explored, it fell into an infinite loop. It could hence, navigate to a point, perform its scan, and then immediately re-target a nearby area it had just visited if it was the largest frontier. This is in fact what occurred during our final run as the robot kept returning to the start line, which led us to bleeding crucial mission time and consequently, we had to white flag. 
+Upon reflection, one potential way we could have kept away from these areas was to have a list of visited frontiers. Each time a new goal is sent, its distance from all the points in the visited_frontiers list could be computed and if it were too close, this goal could have been rejected. Looking back, this is also how it was implemented in the open source code we took reference from. However, the reliance on Gazebo for testing and subsequent late pivot meant a lack of real hardware testing which resulted in us not being prepared for edge cases.
 
 ## Key Lessons Learned
-
-*   **Incremental Integration:** Complexity is the enemy of stability. Building "hardware-first" would have identified QoS and timing issues weeks earlier.
-*   **Sensor Governance:** A deep-dive into sensor metadata—specifically **QoS policies**—is a mandatory prerequisite for integration.
-*   **Sim-to-Real Variance:** Simulation is a sanitized environment. Physical hardware introduces non-deterministic variables (sensor noise, clock drift) that require "compliant" parameter tuning rather than rigid logic.
-*   **Systematic Debugging:** Interface failures are often buried in the communication layer. Examining the ROS 2 "plumbing" is as vital as the high-level logic.
-
+Incremental Integration: Complexity should be added only after the minimal viable system is stable. Building "hardware-first" would have surfaced timing issues earlier.
+Sensor Governance: A deep-dive into sensor metadata—specifically QoS policies and update rates—is a prerequisite for any integration.
+Sim-to-Real Variance: Simulation is a controlled environment; physical hardware introduces non-deterministic variables (sensor noise, clock drift) that require robust, "compliant" parameter tuning.
+Systematic Debugging: Interface failures are often buried in the communication layer. Examining the "plumbing" (ROS 2 topics/QoS) is as important as the high-level logic
 ---
