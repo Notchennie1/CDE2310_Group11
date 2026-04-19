@@ -12,7 +12,7 @@ Both tasks require the robot to physically dock close to the marker (within ~10 
 **2) System Overview**
 <img width="1357" height="466" alt="image" src="https://github.com/user-attachments/assets/9e01fdbc-7299-4b2a-8f6c-1ff865488789" />
 
-<img width="1337" height="726" alt="image" src="https://github.com/user-attachments/assets/2a6e3e7b-31fa-4040-94c1-8c25c167cb72" />
+<img width="1374" height="738" alt="image" src="https://github.com/user-attachments/assets/dff54edd-cb93-4f10-ae50-ae91b9e2dece" />
 
 <img width="1318" height="492" alt="image" src="https://github.com/user-attachments/assets/676c7155-3632-42bd-8847-9e6b9b2b353e" />
 
@@ -84,3 +84,42 @@ During the rotation, the vision node operates in high-priority interrupt mode. A
     Relative Pose: Determining the marker's position relative to the robot's current map coordinate.
 
 <img width="1521" height="600" alt="image" src="https://github.com/user-attachments/assets/6d2f2ecd-c0d9-4c62-845d-7a53922c1848" />
+
+
+
+2.2 Node Architecture
+┌─────────────────────────────────────────────────────────────────┐
+│                        LAPTOP                                   │
+│                                                                 │
+│  ┌──────────────────┐     ┌──────────────────────────────────┐  │
+│  │  simple_explorer │     │       MissionManager             │  │
+│  │  (frontier WFD)  │◄────│  (docking_main.py)               │  │
+│  └────────┬─────────┘     └──────┬───────────────────────────┘  │
+│           │ /cmd_vel             │ /task_a_active                │
+│           │ nav goals            │ /task_b_active                │
+│           ▼                      ▼                              │
+│  ┌──────────────┐     ┌──────────────────────────────────────┐  │
+│  │     Nav2     │     │  task_a_node    │   task_b_node       │  │
+│  │  (navigate   │     │  (Task_A_Ctrl)  │   (Task_B_Ctrl)     │  │
+│  │   to pose)   │     └────────┬────────┴────────────────────┘  │
+│  └──────┬───────┘              │ inherits                        │
+│         │ /cmd_vel             ▼                                │
+│         │            ┌──────────────────┐                       │
+│         │            │   DockingBase    │                       │
+│         │            │ (docking_base.py)│                       │
+│         │            └──────────────────┘                       │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+                        │ SSH / ROS2 DDS
+┌─────────────────────────────────────────────────────────────────┐
+│                    RASPBERRY PI                                 │
+│                                                                 │
+│  ┌──────────────┐     ┌──────────────┐     ┌────────────────┐  │
+│  │ camera_node  │────►│   pnp_node   │────►│  /target_3d    │  │
+│  │ (aruco det.) │     │ (solvePnP)   │     │  PoseStamped   │  │
+│  └──────────────┘     └──────────────┘     └────────────────┘  │
+│                                                                 │
+│  ┌──────────────┐                                               │
+│  │  servo_node  │◄── /fire (Bool)                               │
+│  └──────────────┘                                               │
+└─────────────────────────────────────────────────────────────────┘
